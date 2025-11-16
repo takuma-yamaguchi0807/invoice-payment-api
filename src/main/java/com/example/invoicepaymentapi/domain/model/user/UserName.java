@@ -1,7 +1,12 @@
 package com.example.invoicepaymentapi.domain.model.user;
 
+import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
+import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 氏名値オブジェクト
@@ -15,9 +20,20 @@ public record UserName(String value) {
      * バリデーションを実施
      */
     public static UserName ofCreate(String value) {
-        // TODO: バリデーションエラーをValidationErrorResponseに変換して400エラーを返す
-        // - valueがnullまたは空文字の場合
-        // - valueの長さが255文字を超える場合
+        List<ValidationError> errors = new ArrayList<>();
+
+        if (value == null || value.isEmpty()) {
+            errors.add(ValidationError.required("userName"));
+        } else {
+            if (value.length() > MAX_LENGTH) {
+                errors.add(new ValidationError("userName", "validation.userName.maxLength"));
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+
         return new UserName(value);
     }
 

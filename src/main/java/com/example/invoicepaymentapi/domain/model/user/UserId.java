@@ -1,7 +1,12 @@
 package com.example.invoicepaymentapi.domain.model.user;
 
+import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
+import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ユーザーID値オブジェクト
@@ -13,9 +18,20 @@ public record UserId(Integer value) {
      * バリデーションを実施
      */
     public static UserId ofCreate(Integer value) {
-        // TODO: バリデーションエラーをValidationErrorResponseに変換して400エラーを返す
-        // - valueがnullの場合
-        // - valueが0以下の場合
+        List<ValidationError> errors = new ArrayList<>();
+
+        if (value == null) {
+            errors.add(ValidationError.required("userId"));
+        } else {
+            if (value <= 0) {
+                errors.add(new ValidationError("userId", "validation.userId.zeroOrNegative"));
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+
         return new UserId(value);
     }
 

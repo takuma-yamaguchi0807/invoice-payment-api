@@ -1,7 +1,12 @@
 package com.example.invoicepaymentapi.domain.model.user;
 
+import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
+import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ハッシュ化済みパスワード値オブジェクト
@@ -14,8 +19,16 @@ public record HashedPassword(String value) {
      * バリデーションを実施
      */
     public static HashedPassword ofCreate(String value) {
-        // TODO: バリデーションエラーをValidationErrorResponseに変換して400エラーを返す
-        // - valueがnullまたは空文字の場合
+        List<ValidationError> errors = new ArrayList<>();
+
+        if (value == null || value.isEmpty()) {
+            errors.add(ValidationError.required("hashedPassword"));
+        }
+
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+
         return new HashedPassword(value);
     }
 

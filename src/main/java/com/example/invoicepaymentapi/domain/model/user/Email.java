@@ -1,8 +1,12 @@
 package com.example.invoicepaymentapi.domain.model.user;
 
+import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
+import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -20,10 +24,23 @@ public record Email(String value) {
      * バリデーションを実施
      */
     public static Email ofCreate(String value) {
-        // TODO: バリデーションエラーをValidationErrorResponseに変換して400エラーを返す
-        // - valueがnullまたは空文字の場合
-        // - valueの長さが255文字を超える場合
-        // - valueがメールアドレス形式でない場合
+        List<ValidationError> errors = new ArrayList<>();
+
+        if (value == null || value.isEmpty()) {
+            errors.add(ValidationError.required("email"));
+        } else {
+            if (value.length() > MAX_LENGTH) {
+                errors.add(new ValidationError("email", "validation.email.maxLength"));
+            }
+            if (!EMAIL_PATTERN.matcher(value).matches()) {
+                errors.add(new ValidationError("email", "validation.email.format"));
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+
         return new Email(value);
     }
 

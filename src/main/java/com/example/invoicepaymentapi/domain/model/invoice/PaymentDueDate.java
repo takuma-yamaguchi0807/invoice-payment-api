@@ -1,9 +1,13 @@
 package com.example.invoicepaymentapi.domain.model.invoice;
 
+import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
+import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 支払期日値オブジェクト
@@ -16,9 +20,22 @@ public record PaymentDueDate(LocalDate value) {
      * バリデーションを実施
      */
     public static PaymentDueDate ofCreate(LocalDate value) {
-        // TODO: バリデーションエラーをValidationErrorResponseに変換して400エラーを返す
-        // - valueがnullの場合
-        // - valueが未来の日付でない場合（未来のみ許可）
+        List<ValidationError> errors = new ArrayList<>();
+
+        if (value == null) {
+            errors.add(ValidationError.required("paymentDueDate"));
+        } else {
+            // 未来の日付でない場合のチェック
+            LocalDate today = LocalDate.now();
+            if (!value.isAfter(today)) {
+                errors.add(new ValidationError("paymentDueDate", "validation.paymentDueDate.notFuture"));
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+
         return new PaymentDueDate(value);
     }
 

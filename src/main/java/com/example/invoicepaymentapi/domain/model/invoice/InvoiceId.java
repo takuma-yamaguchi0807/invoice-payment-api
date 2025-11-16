@@ -1,7 +1,12 @@
 package com.example.invoicepaymentapi.domain.model.invoice;
 
+import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
+import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 請求書ID値オブジェクト
@@ -13,9 +18,21 @@ public record InvoiceId(Integer value) {
      * バリデーションを実施
      */
     public static InvoiceId ofCreate(Integer value) {
-        // TODO: バリデーションエラーをValidationErrorResponseに変換して400エラーを返す
-        // - valueがnullの場合
-        // - valueが0以下の場合
+        List<ValidationError> errors = new ArrayList<>();
+
+        if (value == null) {
+            errors.add(ValidationError.required("invoiceId"));
+        } else {
+            // 0以下チェック
+            if (value <= 0) {
+                errors.add(new ValidationError("invoiceId", "validation.invoiceId.zeroOrNegative"));
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+
         return new InvoiceId(value);
     }
 

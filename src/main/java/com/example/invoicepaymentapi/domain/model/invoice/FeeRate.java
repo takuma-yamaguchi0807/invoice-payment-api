@@ -1,10 +1,14 @@
 package com.example.invoicepaymentapi.domain.model.invoice;
 
+import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
+import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 手数料率値オブジェクト
@@ -28,9 +32,28 @@ public record FeeRate(BigDecimal value) {
      * バリデーションを実施
      */
     public static FeeRate ofCreate(BigDecimal value) {
-        // TODO: バリデーションエラーをValidationErrorResponseに変換して400エラーを返す
-        // - valueがnullの場合
-        // - valueの精度がDECIMAL(5,2)を超える場合
+        List<ValidationError> errors = new ArrayList<>();
+
+        if (value == null) {
+            errors.add(ValidationError.required("feeRate"));
+        } else {
+            // 精度チェック（DECIMAL(5,2) = 整数部3桁、小数部2桁）
+            BigDecimal scaled = value.setScale(SCALE, RoundingMode.DOWN);
+            if (scaled.compareTo(value) != 0) {
+                errors.add(new ValidationError("feeRate", "validation.feeRate.scale"));
+            }
+
+            // 整数部の桁数チェック（5桁 - 2桁 = 3桁）
+            BigDecimal integerPart = value.setScale(0, RoundingMode.DOWN);
+            if (integerPart.precision() > 3) {
+                errors.add(new ValidationError("feeRate", "validation.feeRate.scale"));
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+
         BigDecimal normalized = value.setScale(SCALE, RoundingMode.HALF_UP);
         return new FeeRate(normalized);
     }

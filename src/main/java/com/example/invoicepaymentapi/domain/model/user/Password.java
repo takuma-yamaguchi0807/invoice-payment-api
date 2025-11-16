@@ -1,8 +1,12 @@
 package com.example.invoicepaymentapi.domain.model.user;
 
+import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
+import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -18,10 +22,23 @@ public record Password(String value) {
      * バリデーションを実施
      */
     public static Password ofCreate(String value) {
-        // TODO: バリデーションエラーをValidationErrorResponseに変換して400エラーを返す
-        // - valueがnullまたは空文字の場合
-        // - valueの長さが8文字未満の場合
-        // - valueが英大文字・小文字・数値・記号の4種のうち3種以上を含まない場合
+        List<ValidationError> errors = new ArrayList<>();
+
+        if (value == null || value.isEmpty()) {
+            errors.add(ValidationError.required("password"));
+        } else {
+            if (value.length() < MIN_LENGTH) {
+                errors.add(new ValidationError("password", "validation.password.length"));
+            }
+            if (!hasRequiredCharacterTypes(value)) {
+                errors.add(new ValidationError("password", "validation.password.characterTypes"));
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+
         return new Password(value);
     }
 

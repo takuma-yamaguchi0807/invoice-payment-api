@@ -1,24 +1,22 @@
 package com.example.invoicepaymentapi.application.usecase.invoices.dto;
 
-import com.example.invoicepaymentapi.domain.model.invoice.Invoice;
+import com.example.invoicepaymentapi.domain.model.invoice.InvoiceId;
 
 /**
  * 請求書登録レスポンスDTO
- * domain層のInvoice集約ルートから受け取り、presentation層に渡すためのDTO
+ * domain層のInvoiceIdから受け取り、presentation層に渡すためのDTO
  */
 public record CreateInvoiceResponseDto(
         Integer id
 ) {
     /**
-     * Invoice集約ルートからDTOを作成
+     * InvoiceIdからDTOを作成
      *
-     * @param invoice Invoice集約ルート
+     * @param invoiceId 請求書ID
      * @return CreateInvoiceResponseDto
      */
-    public static CreateInvoiceResponseDto from(Invoice invoice) {
-        return new CreateInvoiceResponseDto(
-                invoice.id() != null ? invoice.id().value() : null
-        );
+    public static CreateInvoiceResponseDto from(InvoiceId invoiceId) {
+        return new CreateInvoiceResponseDto(invoiceId.value());
     }
 }
 

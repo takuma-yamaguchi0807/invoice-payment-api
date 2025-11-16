@@ -55,10 +55,10 @@ public class CreateInvoiceUseCase {
         Invoice invoice = Invoice.ofCreate(userIdVo, issueDate, paymentAmount, paymentDueDate);
 
         // 請求書を保存
-        Invoice savedInvoice = invoiceRepository.save(invoice);
+        InvoiceId invoiceId = invoiceRepository.save(invoice);
 
         // レスポンスDTOを作成
-        return CreateInvoiceResponseDto.from(savedInvoice);
+        return CreateInvoiceResponseDto.from(invoiceId);
     }
 }
 

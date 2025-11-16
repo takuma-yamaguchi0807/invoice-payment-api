@@ -8,9 +8,9 @@ spring:
     fallback-to-system-locale: false
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/super_shiharai_kun
-    username: ${DB_USERNAME:myuser}
-    password: ${DB_PASSWORD:mypassword}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -23,15 +23,15 @@ spring:
         format_sql: true
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT}
   servlet:
-    context-path: /api
+    context-path: /api/v1
 
 jwt:
-  secret: ${JWT_SECRET:your-secret-key-here-change-this-in-production}
-  expiration: ${JWT_EXPIRATION:86400}
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
 
 logging:
   level:
-    root: ${LOGGING_LEVEL:INFO}
+    root: ${LOGGING_LEVEL}
     com.example.invoicepaymentapi: DEBUG

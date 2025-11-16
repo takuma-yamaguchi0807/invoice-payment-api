@@ -2,8 +2,6 @@ package com.example.invoicepaymentapi.domain.model.invoice;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,7 +13,6 @@ import java.util.List;
  * DECIMAL(15,2)に対応
  */
 public record Fee(BigDecimal value) {
-    private static final Logger log = LoggerFactory.getLogger(Fee.class);
     private static final int SCALE = 2;
 
     /**

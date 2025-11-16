@@ -121,29 +121,39 @@ paths:
                   value:
                     code: "VALIDATION_ERROR"
                     details:
-                      - field: "issueDate"
-                        message: "発行日は過去または今日の日付である必要があります"
+                      issueDate:
+                        - "発行日は過去または今日の日付である必要があります"
                 invalidDueDate:
                   summary: 支払期日が過去または今日の場合
                   value:
                     code: "VALIDATION_ERROR"
                     details:
-                      - field: "paymentDueDate"
-                        message: "支払期日は未来の日付である必要があります"
+                      paymentDueDate:
+                        - "支払期日は未来の日付である必要があります"
                 invalidAmount:
                   summary: 支払金額が0以下の場合
                   value:
                     code: "VALIDATION_ERROR"
                     details:
-                      - field: "paymentAmount"
-                        message: "支払金額は0より大きい値である必要があります"
+                      paymentAmount:
+                        - "支払金額は0より大きい値である必要があります"
                 invalidDateFormat:
                   summary: 日付形式エラー
                   value:
                     code: "VALIDATION_ERROR"
                     details:
-                      - field: "issueDate"
-                        message: "日付の形式が正しくありません"
+                      issueDate:
+                        - "日付の形式が正しくありません"
+                multipleErrors:
+                  summary: 複数フィールドで複数エラーが発生する場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentAmount:
+                        - "必須フィールドが不足しています"
+                        - "支払金額は0より大きい値である必要があります"
+                      issueDate:
+                        - "発行日は過去または今日の日付である必要があります"
         "401":
           description: Unauthorized
           content:
@@ -223,22 +233,22 @@ paths:
                   value:
                     code: "VALIDATION_ERROR"
                     details:
-                      - field: "paymentDueFrom"
-                        message: "日付の形式が正しくありません"
+                      paymentDueFrom:
+                        - "日付の形式が正しくありません"
                 invalidPageNumber:
                   summary: ページ番号が0以下の場合
                   value:
                     code: "VALIDATION_ERROR"
                     details:
-                      - field: "page_number"
-                        message: "ページ番号は1以上である必要があります"
+                      page_number:
+                        - "ページ番号は1以上である必要があります"
                 invalidDateRange:
                   summary: 日付範囲の論理エラー
                   value:
                     code: "VALIDATION_ERROR"
                     details:
-                      - field: "paymentDueTo"
-                        message: "支払期日の終了日は開始日より後の日付である必要があります"
+                      paymentDueTo:
+                        - "支払期日の終了日は開始日より後の日付である必要があります"
         "401":
           description: Unauthorized
           content:
@@ -306,7 +316,9 @@ components:
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjF9.example"
     ValidationErrorResponse:
       # バリデーションエラーレスポンス
-      # プロパティ毎のエラー詳細を返すため、details配列を使用
+      # プロパティ毎のエラー詳細を返すため、detailsオブジェクトを使用
+      # フィールド名をキー、エラーメッセージの配列を値とする形式
+      # 同一フィールドで複数のエラーが発生する場合、メッセージは配列形式で返す
       type: object
       required:
         - code
@@ -317,22 +329,18 @@ components:
           description: エラーコード
           example: "VALIDATION_ERROR"
         details:
-          type: array
-          description: プロパティ毎のエラー詳細
-          items:
-            type: object
-            required:
-              - field
-              - message
-            properties:
-              field:
-                type: string
-                description: エラーが発生したフィールド名
-                example: "email"
-              message:
-                type: string
-                description: エラーメッセージ
-                example: "必須フィールドが不足しています"
+          type: object
+          description: フィールド名をキー、エラーメッセージの配列を値とするオブジェクト
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email:
+              - "必須フィールドが不足しています"
+              - "メールアドレスの形式が正しくありません"
+            paymentAmount:
+              - "支払金額は0より大きい値である必要があります"
     UnauthorizedErrorResponse:
       # 認証エラーレスポンス
       # セキュリティ上の理由により、詳細情報は返さず、codeとmessageのみを返す

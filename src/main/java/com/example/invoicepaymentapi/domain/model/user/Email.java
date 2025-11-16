@@ -24,6 +24,21 @@ public record Email(String value) {
      * バリデーションを実施
      */
     public static Email ofCreate(String value) {
+        List<ValidationError> errors = validate(value);
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+        return new Email(value);
+    }
+
+    /**
+     * バリデーションを実行し、エラーのリストを返す
+     * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
+     *
+     * @param value メールアドレス
+     * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
+     */
+    public static List<ValidationError> validate(String value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (value == null || value.isEmpty()) {
@@ -37,11 +52,7 @@ public record Email(String value) {
             }
         }
 
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-
-        return new Email(value);
+        return errors;
     }
 
     /**

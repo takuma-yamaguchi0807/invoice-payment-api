@@ -1,12 +1,9 @@
 package com.example.invoicepaymentapi.domain.model.user;
 
-import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
-import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import de.mkammerer.argon2.Argon2;
+import de.mkammerer.argon2.Argon2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * ハッシュ化済みパスワード値オブジェクト
@@ -14,22 +11,20 @@ import java.util.List;
  */
 public record HashedPassword(String value) {
     private static final Logger log = LoggerFactory.getLogger(HashedPassword.class);
+    private static final Argon2 ARGON2 = Argon2Factory.create();
+
     /**
-     * 新規作成時のファクトリメソッド
-     * バリデーションを実施
+     * パスワードからハッシュ化済みパスワードを生成
+     * Argon2を使用してハッシュ化
+     *
+     * @param password ハッシュ化前のパスワード
+     * @return ハッシュ化済みパスワード
+     * @note Password.ofCreateで既に値チェック（バリデーション）が行われているため、
+     *       このメソッドでは追加の検証は不要
      */
-    public static HashedPassword ofCreate(String value) {
-        List<ValidationError> errors = new ArrayList<>();
-
-        if (value == null || value.isEmpty()) {
-            errors.add(ValidationError.required("hashedPassword"));
-        }
-
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-
-        return new HashedPassword(value);
+    public static HashedPassword ofCreate(Password password) {
+        String hash = ARGON2.hash(2, 65536, 1, password.value().toCharArray());
+        return new HashedPassword(hash);
     }
 
     /**
@@ -41,6 +36,24 @@ public record HashedPassword(String value) {
             log.error("HashedPassword cannot be null. Invalid data detected in database.");
         }
         return new HashedPassword(value);
+    }
+
+    /**
+     * 生のパスワードがこのハッシュ化済みパスワードと一致するか検証
+     * ログイン時のパスワード検証で使用
+     *
+     * @param rawPassword 検証する生のパスワード
+     * @return パスワードが一致する場合true、一致しない場合false
+     */
+    public boolean verify(Password rawPassword) {
+        if (this.value == null) {
+            log.warn("HashedPassword value is null. Cannot verify password.");
+            return false;
+        }
+        if (rawPassword == null || rawPassword.value() == null) {
+            return false;
+        }
+        return ARGON2.verify(this.value, rawPassword.value().toCharArray());
     }
 
     @Override

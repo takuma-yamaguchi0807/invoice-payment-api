@@ -20,6 +20,21 @@ public record UserName(String value) {
      * バリデーションを実施
      */
     public static UserName ofCreate(String value) {
+        List<ValidationError> errors = validate(value);
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+        return new UserName(value);
+    }
+
+    /**
+     * バリデーションを実行し、エラーのリストを返す
+     * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
+     *
+     * @param value 氏名
+     * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
+     */
+    public static List<ValidationError> validate(String value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (value == null || value.isEmpty()) {
@@ -30,11 +45,7 @@ public record UserName(String value) {
             }
         }
 
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-
-        return new UserName(value);
+        return errors;
     }
 
     /**

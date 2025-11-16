@@ -29,6 +29,22 @@ public record TaxRate(BigDecimal value) {
      * バリデーションを実施
      */
     public static TaxRate ofCreate(BigDecimal value) {
+        List<ValidationError> errors = validate(value);
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+        BigDecimal normalized = value.setScale(SCALE, RoundingMode.HALF_UP);
+        return new TaxRate(normalized);
+    }
+
+    /**
+     * バリデーションを実行し、エラーのリストを返す
+     * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
+     *
+     * @param value 消費税率
+     * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
+     */
+    public static List<ValidationError> validate(BigDecimal value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (value == null) {
@@ -47,11 +63,6 @@ public record TaxRate(BigDecimal value) {
             }
         }
 
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-
-        BigDecimal normalized = value.setScale(SCALE, RoundingMode.HALF_UP);
-        return new TaxRate(normalized);
+        return errors;
     }
 }

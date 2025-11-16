@@ -18,6 +18,21 @@ public record InvoiceId(Integer value) {
      * バリデーションを実施
      */
     public static InvoiceId ofCreate(Integer value) {
+        List<ValidationError> errors = validate(value);
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+        return new InvoiceId(value);
+    }
+
+    /**
+     * バリデーションを実行し、エラーのリストを返す
+     * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
+     *
+     * @param value 請求書ID
+     * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
+     */
+    public static List<ValidationError> validate(Integer value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (value == null) {
@@ -29,11 +44,7 @@ public record InvoiceId(Integer value) {
             }
         }
 
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-
-        return new InvoiceId(value);
+        return errors;
     }
 
     /**

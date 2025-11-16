@@ -20,6 +20,21 @@ public record IssueDate(LocalDate value) {
      * バリデーションを実施
      */
     public static IssueDate ofCreate(LocalDate value) {
+        List<ValidationError> errors = validate(value);
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+        return new IssueDate(value);
+    }
+
+    /**
+     * バリデーションを実行し、エラーのリストを返す
+     * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
+     *
+     * @param value 発行日
+     * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
+     */
+    public static List<ValidationError> validate(LocalDate value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (value == null) {
@@ -32,11 +47,7 @@ public record IssueDate(LocalDate value) {
             }
         }
 
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-
-        return new IssueDate(value);
+        return errors;
     }
 
     /**

@@ -40,5 +40,10 @@ bin/
 .DS_Store
 Thumbs.db
 
-# txt
-*.txt
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# other
+memo*

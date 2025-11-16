@@ -1,7 +1,9 @@
 package com.example.invoicepaymentapi.presentation.exception;
 
+import com.example.invoicepaymentapi.domain.exception.ConflictException;
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.error.ConflictErrorResponse;
 import com.example.invoicepaymentapi.presentation.error.ValidationErrorResponse;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -59,6 +61,24 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /**
+     * リソース競合例外をハンドリング
+     *
+     * @param ex リソース競合例外
+     * @return ConflictErrorResponse
+     */
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ConflictErrorResponse> handleConflictException(
+            ConflictException ex
+    ) {
+        ConflictErrorResponse response = new ConflictErrorResponse(
+                ConflictErrorResponse.CONFLICT_ERROR_CODE,
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 }
 

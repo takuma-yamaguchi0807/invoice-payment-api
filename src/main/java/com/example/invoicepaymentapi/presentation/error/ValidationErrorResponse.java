@@ -1,5 +1,8 @@
 package com.example.invoicepaymentapi.presentation.error;
 
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Map;
 
 /**
@@ -8,7 +11,9 @@ import java.util.Map;
  * detailsはフィールド名をキー、エラーメッセージの配列を値とするMap形式
  */
 public record ValidationErrorResponse(
+        @JsonProperty(ApiPropertyNames.CODE)
         String code,
+        @JsonProperty(ApiPropertyNames.DETAILS)
         Map<String, java.util.List<String>> details
 ) {
     /**

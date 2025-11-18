@@ -2,8 +2,10 @@ package com.example.invoicepaymentapi.presentation.exception;
 
 import com.example.invoicepaymentapi.domain.exception.ConflictException;
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
+import com.example.invoicepaymentapi.domain.exception.UnauthorizedException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import com.example.invoicepaymentapi.presentation.error.ConflictErrorResponse;
+import com.example.invoicepaymentapi.presentation.error.UnauthorizedErrorResponse;
 import com.example.invoicepaymentapi.presentation.error.ValidationErrorResponse;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -79,6 +81,24 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    /**
+     * 認証失敗例外をハンドリング
+     *
+     * @param ex 認証失敗例外
+     * @return UnauthorizedErrorResponse
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<UnauthorizedErrorResponse> handleUnauthorizedException(
+            UnauthorizedException ex
+    ) {
+        UnauthorizedErrorResponse response = new UnauthorizedErrorResponse(
+                UnauthorizedErrorResponse.UNAUTHORIZED_ERROR_CODE,
+                "Authentication failed"
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 }
 

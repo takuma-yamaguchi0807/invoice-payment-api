@@ -23,7 +23,7 @@ public record Email(String value) {
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
      */
-    public static Email ofCreate(String value) {
+    public static Email create(String value) {
         List<ValidationError> errors = validate(value);
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
@@ -59,7 +59,7 @@ public record Email(String value) {
      * 既存データ取得時のファクトリメソッド
      * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
      */
-    public static Email ofGet(String value) {
+    public static Email reconstruct(String value) {
         if (value == null) {
             log.error("Email cannot be null. Invalid data detected in database.");
         }

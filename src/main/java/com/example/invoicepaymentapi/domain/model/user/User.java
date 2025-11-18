@@ -17,7 +17,7 @@ public record User(
     /**
      * 新規ユーザーを作成するファクトリメソッド
      */
-    public static User ofCreate(
+    public static User create(
             CompanyName companyName,
             UserName name,
             Email email,
@@ -38,7 +38,7 @@ public record User(
     /**
      * 既存ユーザーを再構築するファクトリメソッド（リポジトリから取得時など）
      */
-    public static User ofGet(
+    public static User reconstruct(
             UserId id,
             CompanyName companyName,
             UserName name,

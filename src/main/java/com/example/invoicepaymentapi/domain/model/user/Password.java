@@ -21,7 +21,7 @@ public record Password(String value) {
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
      */
-    public static Password ofCreate(String value) {
+    public static Password create(String value) {
         List<ValidationError> errors = validate(value);
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
@@ -57,7 +57,7 @@ public record Password(String value) {
      * 既存データ取得時のファクトリメソッド
      * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
      */
-    public static Password ofGet(String value) {
+    public static Password reconstruct(String value) {
         if (value == null) {
             log.error("Password cannot be null. Invalid data detected in database.");
         }

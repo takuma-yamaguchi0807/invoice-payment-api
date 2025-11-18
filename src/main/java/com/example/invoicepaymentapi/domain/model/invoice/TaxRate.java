@@ -28,7 +28,7 @@ public record TaxRate(BigDecimal value) {
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
      */
-    public static TaxRate ofCreate(BigDecimal value) {
+    public static TaxRate create(BigDecimal value) {
         List<ValidationError> errors = validate(value);
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
@@ -64,5 +64,17 @@ public record TaxRate(BigDecimal value) {
         }
 
         return errors;
+    }
+
+    /**
+     * 既存データ取得時のファクトリメソッド
+     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     */
+    public static TaxRate reconstruct(BigDecimal value) {
+        if (value == null) {
+            return new TaxRate(null);
+        }
+        BigDecimal normalized = value.setScale(SCALE, RoundingMode.HALF_UP);
+        return new TaxRate(normalized);
     }
 }

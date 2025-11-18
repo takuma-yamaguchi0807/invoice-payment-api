@@ -19,10 +19,10 @@ public record HashedPassword(String value) {
      *
      * @param password ハッシュ化前のパスワード
      * @return ハッシュ化済みパスワード
-     * @note Password.ofCreateで既に値チェック（バリデーション）が行われているため、
+     * @note Password.createで既に値チェック（バリデーション）が行われているため、
      *       このメソッドでは追加の検証は不要
      */
-    public static HashedPassword ofCreate(Password password) {
+    public static HashedPassword create(Password password) {
         String hash = ARGON2.hash(2, 65536, 1, password.value().toCharArray());
         return new HashedPassword(hash);
     }
@@ -31,7 +31,7 @@ public record HashedPassword(String value) {
      * 既存データ取得時のファクトリメソッド
      * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
      */
-    public static HashedPassword ofGet(String value) {
+    public static HashedPassword reconstruct(String value) {
         if (value == null) {
             log.error("HashedPassword cannot be null. Invalid data detected in database.");
         }

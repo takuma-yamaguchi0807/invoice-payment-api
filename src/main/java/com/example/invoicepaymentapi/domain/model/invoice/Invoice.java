@@ -26,9 +26,9 @@ public record Invoice(
      * 支払金額から手数料・消費税・請求金額を自動計算する
      *
      * 計算ロジックは各値オブジェクトのファクトリメソッドに委譲:
-     * - Fee.ofCreate(paymentAmount, feeRate)
-     * - TaxAmount.ofCreate(fee, taxRate)
-     * - TotalAmount.ofCreate(paymentAmount, fee, taxAmount)
+     * - Fee.create(paymentAmount, feeRate)
+     * - TaxAmount.create(fee, taxRate)
+     * - TotalAmount.create(paymentAmount, fee, taxAmount)
      *
      * @param userId ユーザーID
      * @param issueDate 発行日
@@ -36,7 +36,7 @@ public record Invoice(
      * @param paymentDueDate 支払期日
      * @return 請求書エンティティ
      */
-    public static Invoice ofCreate(
+    public static Invoice create(
             UserId userId,
             IssueDate issueDate,
             PaymentAmount paymentAmount,
@@ -47,13 +47,13 @@ public record Invoice(
         TaxRate taxRate = TaxRate.fixed();
 
         // 手数料を計算（値オブジェクトのドメイン知識を使用）
-        Fee fee = Fee.ofCreate(paymentAmount, feeRate);
+        Fee fee = Fee.create(paymentAmount, feeRate);
 
         // 消費税を計算（値オブジェクトのドメイン知識を使用）
-        TaxAmount taxAmount = TaxAmount.ofCreate(fee, taxRate);
+        TaxAmount taxAmount = TaxAmount.create(fee, taxRate);
 
         // 請求金額を計算（値オブジェクトのドメイン知識を使用）
-        TotalAmount totalAmount = TotalAmount.ofCreate(paymentAmount, fee, taxAmount);
+        TotalAmount totalAmount = TotalAmount.create(paymentAmount, fee, taxAmount);
 
         LocalDateTime now = LocalDateTime.now();
         return new Invoice(
@@ -75,7 +75,7 @@ public record Invoice(
     /**
      * 既存請求書を再構築するファクトリメソッド（リポジトリから取得時など）
      */
-    public static Invoice ofGet(
+    public static Invoice reconstruct(
             InvoiceId id,
             UserId userId,
             IssueDate issueDate,

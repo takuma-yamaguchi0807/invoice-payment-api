@@ -23,7 +23,7 @@ public record PaymentAmount(BigDecimal value) {
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
      */
-    public static PaymentAmount ofCreate(BigDecimal value) {
+    public static PaymentAmount create(BigDecimal value) {
         List<ValidationError> errors = validate(value);
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
@@ -70,7 +70,7 @@ public record PaymentAmount(BigDecimal value) {
      * 既存データ取得時のファクトリメソッド
      * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
      */
-    public static PaymentAmount ofGet(BigDecimal value) {
+    public static PaymentAmount reconstruct(BigDecimal value) {
         if (value == null) {
             log.error("PaymentAmount cannot be null. Invalid data detected in database.");
             return new PaymentAmount(null);

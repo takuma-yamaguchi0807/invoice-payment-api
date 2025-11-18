@@ -19,7 +19,7 @@ public record UserName(String value) {
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
      */
-    public static UserName ofCreate(String value) {
+    public static UserName create(String value) {
         List<ValidationError> errors = validate(value);
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
@@ -52,7 +52,7 @@ public record UserName(String value) {
      * 既存データ取得時のファクトリメソッド
      * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
      */
-    public static UserName ofGet(String value) {
+    public static UserName reconstruct(String value) {
         if (value == null) {
             log.error("UserName cannot be null. Invalid data detected in database.");
         }

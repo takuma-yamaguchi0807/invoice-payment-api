@@ -28,7 +28,7 @@ public record FeeRate(BigDecimal value) {
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
      */
-    public static FeeRate ofCreate(BigDecimal value) {
+    public static FeeRate create(BigDecimal value) {
         List<ValidationError> errors = validate(value);
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
@@ -64,5 +64,17 @@ public record FeeRate(BigDecimal value) {
         }
 
         return errors;
+    }
+
+    /**
+     * 既存データ取得時のファクトリメソッド
+     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     */
+    public static FeeRate reconstruct(BigDecimal value) {
+        if (value == null) {
+            return new FeeRate(null);
+        }
+        BigDecimal normalized = value.setScale(SCALE, RoundingMode.HALF_UP);
+        return new FeeRate(normalized);
     }
 }

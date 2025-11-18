@@ -27,7 +27,7 @@ public record TotalAmount(BigDecimal value) {
      * @param taxAmount 消費税
      * @return 請求金額
      */
-    public static TotalAmount ofCreate(PaymentAmount paymentAmount, Fee fee, TaxAmount taxAmount) {
+    public static TotalAmount create(PaymentAmount paymentAmount, Fee fee, TaxAmount taxAmount) {
         BigDecimal totalValue = paymentAmount.value()
                 .add(fee.value())
                 .add(taxAmount.value())
@@ -39,7 +39,7 @@ public record TotalAmount(BigDecimal value) {
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
      */
-    public static TotalAmount ofCreate(BigDecimal value) {
+    public static TotalAmount create(BigDecimal value) {
         List<ValidationError> errors = validate(value);
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
@@ -86,7 +86,7 @@ public record TotalAmount(BigDecimal value) {
      * 既存データ取得時のファクトリメソッド
      * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
      */
-    public static TotalAmount ofGet(BigDecimal value) {
+    public static TotalAmount reconstruct(BigDecimal value) {
         if (value == null) {
             log.error("TotalAmount cannot be null. Invalid data detected in database.");
             return new TotalAmount(null);

@@ -23,7 +23,7 @@ public record TaxAmount(BigDecimal value) {
      * @param taxRate 消費税率
      * @return 消費税
      */
-    public static TaxAmount ofCreate(Fee fee, TaxRate taxRate) {
+    public static TaxAmount create(Fee fee, TaxRate taxRate) {
         BigDecimal taxValue = fee.value()
                 .multiply(taxRate.value())
                 .setScale(SCALE, RoundingMode.HALF_UP);
@@ -34,7 +34,7 @@ public record TaxAmount(BigDecimal value) {
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
      */
-    public static TaxAmount ofCreate(BigDecimal value) {
+    public static TaxAmount create(BigDecimal value) {
         List<ValidationError> errors = validate(value);
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
@@ -75,5 +75,17 @@ public record TaxAmount(BigDecimal value) {
         }
 
         return errors;
+    }
+
+    /**
+     * 既存データ取得時のファクトリメソッド
+     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     */
+    public static TaxAmount reconstruct(BigDecimal value) {
+        if (value == null) {
+            return new TaxAmount(null);
+        }
+        BigDecimal normalized = value.setScale(SCALE, RoundingMode.HALF_UP);
+        return new TaxAmount(normalized);
     }
 }

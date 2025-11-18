@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,11 +18,28 @@ import java.util.List;
 public record PaymentDueDate(LocalDate value) {
     private static final Logger log = LoggerFactory.getLogger(PaymentDueDate.class);
     /**
+     * Stringから支払期日を作成（日付形式チェックを含む）
+     * JSONリクエストやクエリパラメータから受け取った文字列をバリデーションして値オブジェクトを作成
+     *
+     * @param value 日付文字列（ISO形式: yyyy-MM-dd）
+     * @return 支払期日値オブジェクト
+     * @throws DomainValidationException バリデーションエラーがある場合
+     */
+    public static PaymentDueDate create(String value) {
+        List<ValidationError> errors = validate(value);
+        if (!errors.isEmpty()) {
+            throw new DomainValidationException(errors);
+        }
+        LocalDate localDate = LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
+        return create(localDate);
+    }
+
+    /**
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
      */
-    public static PaymentDueDate ofCreate(LocalDate value) {
-        List<ValidationError> errors = validate(value);
+    public static PaymentDueDate create(LocalDate value) {
+        List<ValidationError> errors = validate(value.toString());
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
         }
@@ -29,22 +48,32 @@ public record PaymentDueDate(LocalDate value) {
 
     /**
      * バリデーションを実行し、エラーのリストを返す
+     * 日付形式チェックとビジネスルールチェック（未来の日付のみ許可）を実施
      * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
      *
-     * @param value 支払期日
+     * @param value 日付文字列（ISO形式: yyyy-MM-dd）
      * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
      */
-    public static List<ValidationError> validate(LocalDate value) {
+    public static List<ValidationError> validate(String value) {
         List<ValidationError> errors = new ArrayList<>();
 
-        if (value == null) {
+        if (value == null || value.isEmpty()) {
             errors.add(ValidationError.required("paymentDueDate"));
-        } else {
-            // 未来の日付でない場合のチェック
-            LocalDate today = LocalDate.now();
-            if (!value.isAfter(today)) {
-                errors.add(new ValidationError("paymentDueDate", "validation.paymentDueDate.notFuture"));
-            }
+            return errors;
+        }
+
+        LocalDate localDate;
+        try {
+            localDate = LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException e) {
+            errors.add(new ValidationError("paymentDueDate", "validation.date.format"));
+            return errors;
+        }
+
+        // 未来の日付でない場合のチェック（未来の日付のみ許可）
+        LocalDate today = LocalDate.now();
+        if (!localDate.isAfter(today)) {
+            errors.add(new ValidationError("paymentDueDate", "validation.paymentDueDate.notFuture"));
         }
 
         return errors;
@@ -54,7 +83,7 @@ public record PaymentDueDate(LocalDate value) {
      * 既存データ取得時のファクトリメソッド
      * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
      */
-    public static PaymentDueDate ofGet(LocalDate value) {
+    public static PaymentDueDate reconstruct(LocalDate value) {
         if (value == null) {
             log.error("PaymentDueDate cannot be null. Invalid data detected in database.");
         }

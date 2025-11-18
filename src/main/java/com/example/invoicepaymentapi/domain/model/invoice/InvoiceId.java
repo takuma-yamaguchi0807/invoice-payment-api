@@ -17,7 +17,7 @@ public record InvoiceId(Integer value) {
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
      */
-    public static InvoiceId ofCreate(Integer value) {
+    public static InvoiceId create(Integer value) {
         List<ValidationError> errors = validate(value);
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
@@ -51,7 +51,7 @@ public record InvoiceId(Integer value) {
      * 既存データ取得時のファクトリメソッド
      * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
      */
-    public static InvoiceId ofGet(Integer value) {
+    public static InvoiceId reconstruct(Integer value) {
         if (value == null) {
             log.error("InvoiceId cannot be null. Invalid data detected in database.");
         }

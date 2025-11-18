@@ -3,7 +3,7 @@ info:
   title: Invoice Payment API
   version: 1.0.0
 servers:
-  - url: /api
+  - url: /api/v1
 paths:
   /users:
     # ユーザー登録API
@@ -34,6 +34,67 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationErrorResponse"
+              examples:
+                missingRequiredFields:
+                  summary: 必須フィールドが不足している場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      companyName:
+                        - "入力してください"
+                      name:
+                        - "入力してください"
+                      email:
+                        - "入力してください"
+                      password:
+                        - "入力してください"
+                invalidEmailFormat:
+                  summary: メールアドレス形式エラー
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      email:
+                        - "メールアドレスの形式が正しくありません"
+                invalidPasswordFormat:
+                  summary: パスワード形式エラー
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      password:
+                        - "パスワードは8文字以上にしてください"
+                        - "パスワードは英大文字・小文字・数値・記号の4種のうち3種以上を含めてください"
+                invalidCompanyNameLength:
+                  summary: 企業名が255文字を超える場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      companyName:
+                        - "企業名は255文字以内にしてください"
+                invalidUserNameLength:
+                  summary: 氏名が255文字を超える場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      name:
+                        - "氏名は255文字以内にしてください"
+                invalidEmailLength:
+                  summary: メールアドレスが255文字を超える場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      email:
+                        - "メールアドレスは255文字以内にしてください"
+                multipleErrors:
+                  summary: 複数フィールドで複数エラーが発生する場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      companyName:
+                        - "入力してください"
+                      email:
+                        - "メールアドレスの形式が正しくありません"
+                      password:
+                        - "パスワードは8文字以上にしてください"
         "409":
           # コンフリクトエラー
           # emailが既に存在する場合（UNIQUE制約違反）
@@ -68,12 +129,23 @@ paths:
                 accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjF9.example"
         "400":
           # 必須フィールドのバリデーションエラー
-          # プロパティ毎のエラー詳細を返すため、details配列を使用
+          # セキュリティ上の理由により、メール形式エラーやパスワード形式エラーは401として返す
+          # 必須フィールドが不足している場合のみ400を返す
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ValidationErrorResponse"
+              examples:
+                missingRequiredFields:
+                  summary: 必須フィールドが不足している場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      email:
+                        - "入力してください"
+                      password:
+                        - "入力してください"
         "401":
           # 認証エラー
           # セキュリティ上の理由により、メール形式エラー、パスワード形式エラー、
@@ -122,21 +194,28 @@ paths:
                     code: "VALIDATION_ERROR"
                     details:
                       issueDate:
-                        - "発行日は過去または今日の日付である必要があります"
+                        - "発行日は過去または今日の日付にしてください"
                 invalidDueDate:
                   summary: 支払期日が過去または今日の場合
                   value:
                     code: "VALIDATION_ERROR"
                     details:
                       paymentDueDate:
-                        - "支払期日は未来の日付である必要があります"
+                        - "支払期日は未来の日付にしてください"
                 invalidAmount:
                   summary: 支払金額が0以下の場合
                   value:
                     code: "VALIDATION_ERROR"
                     details:
                       paymentAmount:
-                        - "支払金額は0より大きい値である必要があります"
+                        - "支払金額は0より大きい値にしてください"
+                invalidAmountPrecision:
+                  summary: 支払金額の精度エラー（小数部が2桁を超える、または整数部が13桁を超える）
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentAmount:
+                        - "支払金額の精度が正しくありません"
                 invalidDateFormat:
                   summary: 日付形式エラー
                   value:
@@ -150,10 +229,10 @@ paths:
                     code: "VALIDATION_ERROR"
                     details:
                       paymentAmount:
-                        - "必須フィールドが不足しています"
-                        - "支払金額は0より大きい値である必要があります"
+                        - "入力してください"
+                        - "支払金額は0より大きい値にしてください"
                       issueDate:
-                        - "発行日は過去または今日の日付である必要があります"
+                        - "発行日は過去または今日の日付にしてください"
         "401":
           description: Unauthorized
           content:
@@ -241,14 +320,14 @@ paths:
                     code: "VALIDATION_ERROR"
                     details:
                       page_number:
-                        - "ページ番号は1以上である必要があります"
+                        - "ページ番号は1以上にしてください"
                 invalidDateRange:
                   summary: 日付範囲の論理エラー
                   value:
                     code: "VALIDATION_ERROR"
                     details:
                       paymentDueTo:
-                        - "支払期日の終了日は開始日より後の日付である必要があります"
+                        - "支払期日の終了日は開始日より後の日付にしてください"
         "401":
           description: Unauthorized
           content:
@@ -337,7 +416,7 @@ components:
               type: string
           example:
             email:
-              - "必須フィールドが不足しています"
+              - "入力してください"
               - "メールアドレスの形式が正しくありません"
             paymentAmount:
               - "支払金額は0より大きい値である必要があります"

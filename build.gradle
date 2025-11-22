@@ -9,6 +9,7 @@ version = '1.0.0'
 
 java {
     sourceCompatibility = '17'
+    targetCompatibility = '17'
 }
 
 configurations {
@@ -42,6 +43,9 @@ dependencies {
 
     // Dotenv (.env file support)
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // Apache Commons Lang
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
 
     // Lombok
     compileOnly 'org.projectlombok:lombok'

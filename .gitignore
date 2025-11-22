@@ -20,6 +20,11 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# Gradle local properties (個人の環境依存設定)
+gradle.properties.local
+local.properties
+*.local.properties
+
 # IDE - IntelliJ IDEA
 .idea/
 *.iws

@@ -1,20 +1,25 @@
 package com.example.invoicepaymentapi.domain.model.auth;
 
-import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
-import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.domain.exception.UnauthorizedException;
 import com.example.invoicepaymentapi.domain.model.user.UserId;
+import org.apache.commons.lang3.StringUtils;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 /**
  * JWTアクセストークン値オブジェクト
@@ -24,35 +29,35 @@ public record AccessToken(String value) {
     private static final Logger log = LoggerFactory.getLogger(AccessToken.class);
     private static final String JWT_SECRET = System.getenv("JWT_SECRET");
     private static final String JWT_EXPIRATION = System.getenv("JWT_EXPIRATION");
-    private static final long DEFAULT_EXPIRATION_HOURS = 24;
 
     /**
-     * ユーザーIDからJWTアクセストークンを生成
+     * ユーザーIDからJWTアクセストークンを作成
      *
      * @param userId ユーザーID
-     * @return 生成されたJWTアクセストークン
+     * @return 作成されたJWTアクセストークン
      */
-    public static AccessToken generate(UserId userId) {
+    public static AccessToken create(UserId userId) {
         if (userId == null || userId.value() == null) {
             throw new IllegalArgumentException("UserId cannot be null");
         }
 
-        if (JWT_SECRET == null || JWT_SECRET.isEmpty()) {
+        if (StringUtils.isEmpty(JWT_EXPIRATION)) {
+            throw new IllegalStateException("JWT_EXPIRATION environment variable is not set");
+        }
+
+        long expirationSeconds;
+        try {
+            expirationSeconds = Long.parseLong(JWT_EXPIRATION);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("JWT_EXPIRATION environment variable has invalid value: " + JWT_EXPIRATION, e);
+        }
+
+        if (StringUtils.isEmpty(JWT_SECRET)) {
             throw new IllegalStateException("JWT_SECRET environment variable is not set");
         }
-
-        long expirationHours = DEFAULT_EXPIRATION_HOURS;
-        if (JWT_EXPIRATION != null && !JWT_EXPIRATION.isEmpty()) {
-            try {
-                expirationHours = Long.parseLong(JWT_EXPIRATION);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid JWT_EXPIRATION value: {}. Using default: {} hours", JWT_EXPIRATION, DEFAULT_EXPIRATION_HOURS);
-            }
-        }
-
         SecretKey key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
         Instant now = Instant.now();
-        Instant expiration = now.plus(expirationHours, ChronoUnit.HOURS);
+        Instant expiration = now.plus(expirationSeconds, ChronoUnit.SECONDS);
 
         String token = Jwts.builder()
                 .subject(String.valueOf(userId.value()))
@@ -66,81 +71,90 @@ public record AccessToken(String value) {
     }
 
     /**
-     * JWT文字列からAccessToken値オブジェクトを作成（検証付き）
+     * JWT文字列を検証する（認証用）
+     * 期限切れ、改ざん、形式不正などをチェックし、認証エラーの場合はUnauthorizedExceptionをスロー
      *
      * @param token JWT文字列
-     * @return 検証済みのAccessToken値オブジェクト
-     * @throws DomainValidationException JWTが無効な場合
+     * @throws IllegalArgumentException トークンがnullまたは空の場合
+     * @throws IllegalStateException JWT_SECRET環境変数が設定されていない場合（システム設定エラー）
+     * @throws UnauthorizedException JWT検証に失敗した場合（期限切れ、改ざん、形式不正など）
      */
-    public static AccessToken create(String token) {
-        List<ValidationError> errors = validate(token);
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-        return new AccessToken(token);
-    }
-
-    /**
-     * JWT文字列を検証し、エラーのリストを返す
-     *
-     * @param token JWT文字列
-     * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
-     */
-    public static List<ValidationError> validate(String token) {
-        List<ValidationError> errors = new ArrayList<>();
-
-        if (token == null || token.isEmpty()) {
-            errors.add(ValidationError.required("accessToken"));
-            return errors;
-        }
-
-        if (JWT_SECRET == null || JWT_SECRET.isEmpty()) {
-            log.error("JWT_SECRET environment variable is not set");
-            errors.add(new ValidationError("accessToken", "validation.accessToken.invalid"));
-            return errors;
+    public static void validate(String token) {
+        if (StringUtils.isEmpty(token)) {
+            throw new IllegalArgumentException("JWT token cannot be null or empty");
         }
 
         try {
-            SecretKey key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
-            Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token);
+            parseSignedClaims(token);
+        } catch (IllegalStateException e) {
+            // JWT_SECRET未設定の場合はそのまま再スロー（システム設定エラー）
+            throw e;
+        } catch (ExpiredJwtException e) {
+            log.debug("JWT token expired: {}", e.getMessage());
+            throw new UnauthorizedException("JWT token has expired");
+        } catch (SignatureException | MalformedJwtException e) {
+            log.debug("JWT token validation failed: {}", e.getMessage());
+            throw new UnauthorizedException("Invalid JWT token");
+        } catch (JwtException e) {
+            log.debug("JWT token validation failed: {}", e.getMessage());
+            throw new UnauthorizedException("Invalid JWT token");
         } catch (Exception e) {
-            log.debug("JWT validation failed: {}", e.getMessage());
-            errors.add(new ValidationError("accessToken", "validation.accessToken.invalid"));
+            log.debug("Unexpected error during JWT validation: {}", e.getMessage());
+            throw new UnauthorizedException("Invalid JWT token");
         }
-
-        return errors;
     }
 
     /**
      * JWTからユーザーIDを抽出
+     * このメソッドを呼び出す前に、validate()で検証済みであることを前提とする
      *
      * @return ユーザーID
-     * @throws IllegalStateException JWTが無効な場合
+     * @throws IllegalStateException JWT_SECRET環境変数が設定されていない場合、またはUserIdがJWTクレームに存在しない場合
+     * @throws UnauthorizedException JWT検証に失敗した場合（期限切れ、改ざん、形式不正など）
      */
     public UserId extractUserId() {
-        if (JWT_SECRET == null || JWT_SECRET.isEmpty()) {
-            throw new IllegalStateException("JWT_SECRET environment variable is not set");
-        }
-
         try {
-            SecretKey key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
-            var claims = Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(this.value);
-
+            Jws<Claims> claims = parseSignedClaims(this.value);
             Integer userId = claims.getPayload().get("userId", Integer.class);
             if (userId == null) {
                 throw new IllegalStateException("UserId not found in JWT claims");
             }
             return UserId.reconstruct(userId);
+        } catch (IllegalStateException e) {
+            // JWT_SECRET未設定またはUserId未存在の場合はそのまま再スロー
+            throw e;
+        } catch (ExpiredJwtException e) {
+            log.debug("JWT token expired: {}", e.getMessage());
+            throw new UnauthorizedException("JWT token has expired");
+        } catch (SignatureException | MalformedJwtException e) {
+            log.debug("JWT token validation failed: {}", e.getMessage());
+            throw new UnauthorizedException("Invalid JWT token");
+        } catch (JwtException e) {
+            log.debug("JWT token validation failed: {}", e.getMessage());
+            throw new UnauthorizedException("Invalid JWT token");
         } catch (Exception e) {
-            log.error("Failed to extract userId from JWT: {}", e.getMessage());
-            throw new IllegalStateException("Invalid JWT token", e);
+            log.error("Unexpected error during JWT parsing: {}", e.getMessage());
+            throw new UnauthorizedException("Invalid JWT token");
         }
+    }
+
+    /**
+     * JWTトークンを検証してパースする
+     *
+     * @param token JWTトークン文字列
+     * @return パースされたJWTクレーム
+     * @throws IllegalStateException JWT_SECRET環境変数が設定されていない場合
+     * @throws Exception JWT検証に失敗した場合
+     */
+    private static Jws<Claims> parseSignedClaims(String token) {
+        if (StringUtils.isEmpty(JWT_SECRET)) {
+            throw new IllegalStateException("JWT_SECRET environment variable is not set");
+        }
+        SecretKey key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token);
     }
 }
 

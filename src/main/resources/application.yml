@@ -27,10 +27,6 @@ server:
   servlet:
     context-path: /api/v1
 
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
-
 logging:
   level:
     root: ${LOGGING_LEVEL}

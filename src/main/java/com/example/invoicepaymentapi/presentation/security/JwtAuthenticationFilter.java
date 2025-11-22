@@ -74,7 +74,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private Authentication authenticate(String token) {
         try {
-            AccessToken accessToken = AccessToken.create(token);
+            // JWTトークンを検証
+            AccessToken.validate(token);
+            
+            // 検証成功後、AccessToken値オブジェクトを作成
+            AccessToken accessToken = new AccessToken(token);
             UserId userId = accessToken.extractUserId();
 
             // 認証情報を作成（権限は現時点ではROLE_USERのみ）

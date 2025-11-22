@@ -51,8 +51,8 @@ public class LoginUseCase {
             throw new UnauthorizedException("Invalid email or password");
         }
 
-        // JWTアクセストークンを生成
-        AccessToken accessToken = AccessToken.generate(user.id());
+        // JWTアクセストークンを作成
+        AccessToken accessToken = AccessToken.create(user.id());
 
         // レスポンスDTOを作成
         return LoginResponseDto.from(accessToken);

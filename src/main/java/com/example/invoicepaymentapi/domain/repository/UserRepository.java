@@ -14,9 +14,8 @@ public interface UserRepository {
      * ユーザーを保存
      *
      * @param user 保存するユーザー
-     * @return 保存されたユーザー（IDが設定された状態）
      */
-    User save(User user);
+    void save(User user);
 
     /**
      * メールアドレスでユーザーを検索

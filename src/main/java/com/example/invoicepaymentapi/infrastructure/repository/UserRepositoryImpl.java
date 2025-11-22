@@ -23,15 +23,14 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User save(User user) {
+    public void save(User user) {
         UserEntity entity = toEntity(user);
         if (entity.getId() == null) {
             entityManager.persist(entity);
         } else {
-            entity = entityManager.merge(entity);
+            entityManager.merge(entity);
         }
         entityManager.flush();
-        return toDomain(entity);
     }
 
     @Override

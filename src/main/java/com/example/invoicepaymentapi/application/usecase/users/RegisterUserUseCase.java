@@ -5,6 +5,7 @@ import com.example.invoicepaymentapi.domain.exception.ConflictException;
 import com.example.invoicepaymentapi.domain.model.user.*;
 import com.example.invoicepaymentapi.domain.repository.UserRepository;
 import com.example.invoicepaymentapi.domain.service.DomainValidationService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,12 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
  * ユーザー登録ユースケース
  */
 @Service
+@RequiredArgsConstructor
 public class RegisterUserUseCase {
     private final UserRepository userRepository;
-
-    public RegisterUserUseCase(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     /**
      * ユーザーを登録する

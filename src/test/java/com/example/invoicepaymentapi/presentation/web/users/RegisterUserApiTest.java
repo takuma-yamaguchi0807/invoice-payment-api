@@ -7,6 +7,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -20,8 +22,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * ユーザー登録APIのテスト
+ * 
+ * TODO: 後でユニットテストで事前ログインするような汎用クラスを作成する
+ *       認証が必要なエンドポイントのテストで使用する
  */
-@WebMvcTest(UserController.class)
+@WebMvcTest(
+        controllers = UserController.class,
+        excludeAutoConfiguration = SecurityAutoConfiguration.class
+)
+@AutoConfigureMockMvc(addFilters = false)
 class RegisterUserApiTest {
     @Autowired
     MockMvc mockMvc;
@@ -132,6 +141,123 @@ class RegisterUserApiTest {
             mockMvc.perform(post("/api/v1/users")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("パスワードが8文字未満の場合、400 Bad Requestを返す")
+        void shouldReturn400WhenPasswordIsLessThan8Characters() throws Exception {
+            // Given
+            RegisterUserRequest request = new RegisterUserRequest(
+                    "株式会社サンプル",
+                    "山田太郎",
+                    "yamada@example.com",
+                    "Pass12!"
+            );
+            doNothing().when(registerUserUseCase).execute(any());
+
+            // When & Then
+            mockMvc.perform(post("/api/v1/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("パスワードの文字種が不足している場合、400 Bad Requestを返す")
+        void shouldReturn400WhenPasswordHasInsufficientCharacterTypes() throws Exception {
+            // Given - 小文字のみ（1種類）
+            RegisterUserRequest request = new RegisterUserRequest(
+                    "株式会社サンプル",
+                    "山田太郎",
+                    "yamada@example.com",
+                    "password"
+            );
+            doNothing().when(registerUserUseCase).execute(any());
+
+            // When & Then
+            mockMvc.perform(post("/api/v1/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("companyNameが255文字を超える場合、400 Bad Requestを返す")
+        void shouldReturn400WhenCompanyNameExceedsMaxLength() throws Exception {
+            // Given
+            String longCompanyName = "a".repeat(256);
+            RegisterUserRequest request = new RegisterUserRequest(
+                    longCompanyName,
+                    "山田太郎",
+                    "yamada@example.com",
+                    "Password123!"
+            );
+            doNothing().when(registerUserUseCase).execute(any());
+
+            // When & Then
+            mockMvc.perform(post("/api/v1/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("nameが255文字を超える場合、400 Bad Requestを返す")
+        void shouldReturn400WhenNameExceedsMaxLength() throws Exception {
+            // Given
+            String longName = "a".repeat(256);
+            RegisterUserRequest request = new RegisterUserRequest(
+                    "株式会社サンプル",
+                    longName,
+                    "yamada@example.com",
+                    "Password123!"
+            );
+            doNothing().when(registerUserUseCase).execute(any());
+
+            // When & Then
+            mockMvc.perform(post("/api/v1/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("emailが254文字を超える場合、400 Bad Requestを返す")
+        void shouldReturn400WhenEmailExceedsMaxLength() throws Exception {
+            // Given
+            String longEmail = "a".repeat(245) + "@example.com"; // 254文字を超える
+            RegisterUserRequest request = new RegisterUserRequest(
+                    "株式会社サンプル",
+                    "山田太郎",
+                    longEmail,
+                    "Password123!"
+            );
+            doNothing().when(registerUserUseCase).execute(any());
+
+            // When & Then
+            mockMvc.perform(post("/api/v1/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("複数フィールドで複数エラーが発生する場合、400 Bad Requestを返す")
+        void shouldReturn400WhenMultipleFieldsHaveErrors() throws Exception {
+            // Given - companyName不足、email形式不正、パスワード8文字未満
+            String requestJson = """
+                    {
+                        "name": "山田太郎",
+                        "email": "invalid-email",
+                        "password": "Pass12!"
+                    }
+                    """;
+
+            // When & Then
+            mockMvc.perform(post("/api/v1/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestJson))
                     .andExpect(status().isBadRequest());
         }
     }

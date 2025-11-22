@@ -57,12 +57,4 @@ public record User(
                 updatedAt
         );
     }
-
-    /**
-     * パスワードを検証する
-     * 注意: 実際の検証ロジック（Argon2）はドメインサービスで実装
-     */
-    public boolean verifyPassword(HashedPassword hashedPassword) {
-        return this.password.equals(hashedPassword);
-    }
 }

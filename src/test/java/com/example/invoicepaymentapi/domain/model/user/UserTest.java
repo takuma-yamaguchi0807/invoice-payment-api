@@ -88,17 +88,14 @@ class UserTest {
         }
 
         @Test
-        @DisplayName("同じハッシュ化パスワードでverifyPasswordがtrueを返す")
-        void shouldReturnTrueWhenVerifyingSameHashedPassword() {
+        @DisplayName("正しいパスワードでHashedPassword.verifyがtrueを返す")
+        void shouldReturnTrueWhenVerifyingCorrectPassword() {
             // Given
-            CompanyName companyName = CompanyName.create("株式会社サンプル");
-            UserName name = UserName.create("山田太郎");
-            Email email = Email.create("yamada@example.com");
-            HashedPassword password = HashedPassword.reconstruct("$argon2id$v=19$m=65536,t=3,p=4$hash");
-            User user = User.create(companyName, name, email, password);
+            Password rawPassword = Password.create("Password123!");
+            HashedPassword hashedPassword = HashedPassword.create(rawPassword);
 
             // When
-            boolean result = user.verifyPassword(password);
+            boolean result = hashedPassword.verify(rawPassword);
 
             // Then
             assertTrue(result);
@@ -109,18 +106,15 @@ class UserTest {
     @DisplayName("異常系")
     class AbnormalCase {
         @Test
-        @DisplayName("異なるハッシュ化パスワードでverifyPasswordがfalseを返す")
-        void shouldReturnFalseWhenVerifyingDifferentHashedPassword() {
+        @DisplayName("間違ったパスワードでHashedPassword.verifyがfalseを返す")
+        void shouldReturnFalseWhenVerifyingIncorrectPassword() {
             // Given
-            CompanyName companyName = CompanyName.create("株式会社サンプル");
-            UserName name = UserName.create("山田太郎");
-            Email email = Email.create("yamada@example.com");
-            HashedPassword password = HashedPassword.reconstruct("$argon2id$v=19$m=65536,t=3,p=4$hash");
-            HashedPassword differentPassword = HashedPassword.reconstruct("$argon2id$v=19$m=65536,t=3,p=4$different");
-            User user = User.create(companyName, name, email, password);
+            Password correctPassword = Password.create("Password123!");
+            Password wrongPassword = Password.create("WrongPass123!");
+            HashedPassword hashedPassword = HashedPassword.create(correctPassword);
 
             // When
-            boolean result = user.verifyPassword(differentPassword);
+            boolean result = hashedPassword.verify(wrongPassword);
 
             // Then
             assertFalse(result);

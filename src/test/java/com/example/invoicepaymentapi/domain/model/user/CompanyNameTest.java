@@ -60,17 +60,6 @@ class CompanyNameTest {
         }
 
         @Test
-        @DisplayName("reconstructメソッドでnullでも値オブジェクトを作成できる")
-        void shouldReconstructCompanyNameWithNull() {
-            // When
-            CompanyName companyName = CompanyName.reconstruct(null);
-
-            // Then
-            assertNotNull(companyName);
-            assertNull(companyName.value());
-        }
-
-        @Test
         @DisplayName("reconstructメソッドで有効な企業名で値オブジェクトを作成できる")
         void shouldReconstructCompanyNameWithValidValue() {
             // Given
@@ -125,7 +114,7 @@ class CompanyNameTest {
             );
             assertFalse(exception.getErrors().isEmpty());
             assertEquals("companyName", exception.getErrors().get(0).field());
-            assertEquals("validation.companyName.maxLength", exception.getErrors().get(0).messageKey());
+            assertEquals("validation.maxLength", exception.getErrors().get(0).messageKey());
         }
 
         @Test
@@ -162,7 +151,18 @@ class CompanyNameTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("companyName", errors.get(0).field());
-            assertEquals("validation.companyName.maxLength", errors.get(0).messageKey());
+            assertEquals("validation.maxLength", errors.get(0).messageKey());
+        }
+
+        @Test
+        @DisplayName("reconstructメソッドでnullを渡すとIllegalArgumentExceptionがスローされる")
+        void shouldThrowIllegalArgumentExceptionWhenReconstructingWithNull() {
+            // When & Then
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> CompanyName.reconstruct(null)
+            );
+            assertEquals("CompanyName cannot be null", exception.getMessage());
         }
     }
 }

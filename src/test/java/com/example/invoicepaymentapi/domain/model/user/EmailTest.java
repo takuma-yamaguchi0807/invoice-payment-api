@@ -5,6 +5,8 @@ import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 
@@ -33,10 +35,10 @@ class EmailTest {
         }
 
         @Test
-        @DisplayName("最大長（255文字）のメールアドレスで値オブジェクトを作成できる")
+        @DisplayName("最大長（254文字）のメールアドレスで値オブジェクトを作成できる")
         void shouldCreateEmailWithMaxLength() {
             // Given
-            String email = "a".repeat(245) + "@example.com"; // 255文字
+            String email = "a".repeat(242) + "@example.com"; // 254文字 (242 + 12) - RFC 5321準拠
 
             // When
             Email emailVo = Email.create(email);
@@ -57,17 +59,6 @@ class EmailTest {
 
             // Then
             assertTrue(errors.isEmpty());
-        }
-
-        @Test
-        @DisplayName("reconstructメソッドでnullでも値オブジェクトを作成できる")
-        void shouldReconstructEmailWithNull() {
-            // When
-            Email email = Email.reconstruct(null);
-
-            // Then
-            assertNotNull(email);
-            assertNull(email.value());
         }
 
         @Test
@@ -113,10 +104,10 @@ class EmailTest {
         }
 
         @Test
-        @DisplayName("255文字を超えるメールアドレスで作成しようとすると例外がスローされる")
+        @DisplayName("254文字を超えるメールアドレスで作成しようとすると例外がスローされる")
         void shouldThrowExceptionWhenCreatingEmailExceedingMaxLength() {
             // Given
-            String email = "a".repeat(246) + "@example.com"; // 256文字
+            String email = "a".repeat(243) + "@example.com"; // 255文字（RFC 5321の254文字を超える）
 
             // When & Then
             DomainValidationException exception = assertThrows(
@@ -125,31 +116,27 @@ class EmailTest {
             );
             assertFalse(exception.getErrors().isEmpty());
             assertEquals("email", exception.getErrors().get(0).field());
-            assertEquals("validation.email.maxLength", exception.getErrors().get(0).messageKey());
+            assertEquals("validation.maxLength", exception.getErrors().get(0).messageKey());
         }
 
-        @Test
+        @ParameterizedTest
+        @ValueSource(strings = {
+                "invalid-email",
+                "@example.com",
+                "test@",
+                "test@example",
+                "test..test@example.com"
+        })
         @DisplayName("不正な形式のメールアドレスで作成しようとすると例外がスローされる")
-        void shouldThrowExceptionWhenCreatingEmailWithInvalidFormat() {
-            // Given
-            String[] invalidEmails = {
-                    "invalid-email",
-                    "@example.com",
-                    "test@",
-                    "test@example",
-                    "test..test@example.com"
-            };
-
-            for (String invalidEmail : invalidEmails) {
-                // When & Then
-                DomainValidationException exception = assertThrows(
-                        DomainValidationException.class,
-                        () -> Email.create(invalidEmail)
-                );
-                assertFalse(exception.getErrors().isEmpty());
-                assertEquals("email", exception.getErrors().get(0).field());
-                assertEquals("validation.email.format", exception.getErrors().get(0).messageKey());
-            }
+        void shouldThrowExceptionWhenCreatingEmailWithInvalidFormat(String invalidEmail) {
+            // When & Then
+            DomainValidationException exception = assertThrows(
+                    DomainValidationException.class,
+                    () -> Email.create(invalidEmail)
+            );
+            assertFalse(exception.getErrors().isEmpty());
+            assertEquals("email", exception.getErrors().get(0).field());
+            assertEquals("validation.email.format", exception.getErrors().get(0).messageKey());
         }
 
         @Test
@@ -175,10 +162,10 @@ class EmailTest {
         }
 
         @Test
-        @DisplayName("validateメソッドが255文字を超える場合にエラーを返す")
+        @DisplayName("validateメソッドが254文字を超える場合にエラーを返す")
         void shouldReturnErrorWhenValidatingExceedingMaxLength() {
             // Given
-            String email = "a".repeat(246) + "@example.com"; // 256文字
+            String email = "a".repeat(243) + "@example.com"; // 255文字（RFC 5321の254文字を超える）
 
             // When
             List<ValidationError> errors = Email.validate(email);
@@ -186,7 +173,7 @@ class EmailTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("email", errors.get(0).field());
-            assertEquals("validation.email.maxLength", errors.get(0).messageKey());
+            assertEquals("validation.maxLength", errors.get(0).messageKey());
         }
 
         @Test
@@ -202,6 +189,17 @@ class EmailTest {
             assertFalse(errors.isEmpty());
             assertEquals("email", errors.get(0).field());
             assertEquals("validation.email.format", errors.get(0).messageKey());
+        }
+
+        @Test
+        @DisplayName("reconstructメソッドでnullを渡すとIllegalArgumentExceptionがスローされる")
+        void shouldThrowIllegalArgumentExceptionWhenReconstructingWithNull() {
+            // When & Then
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> Email.reconstruct(null)
+            );
+            assertEquals("Email cannot be null", exception.getMessage());
         }
     }
 }

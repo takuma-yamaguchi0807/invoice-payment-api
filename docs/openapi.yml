@@ -63,27 +63,17 @@ paths:
                       password:
                         - "パスワードは8文字以上にしてください"
                         - "パスワードは英大文字・小文字・数値・記号の4種のうち3種以上を含めてください"
-                invalidCompanyNameLength:
-                  summary: 企業名が255文字を超える場合
+                invalidMaxLength:
+                  summary: 文字数制限エラー（最大長を超える場合）
                   value:
                     code: "VALIDATION_ERROR"
                     details:
                       companyName:
-                        - "企業名は255文字以内にしてください"
-                invalidUserNameLength:
-                  summary: 氏名が255文字を超える場合
-                  value:
-                    code: "VALIDATION_ERROR"
-                    details:
+                        - "255文字以内にしてください"
                       name:
-                        - "氏名は255文字以内にしてください"
-                invalidEmailLength:
-                  summary: メールアドレスが255文字を超える場合
-                  value:
-                    code: "VALIDATION_ERROR"
-                    details:
+                        - "255文字以内にしてください"
                       email:
-                        - "メールアドレスは255文字以内にしてください"
+                        - "254文字以内にしてください"
                 multipleErrors:
                   summary: 複数フィールドで複数エラーが発生する場合
                   value:
@@ -362,8 +352,8 @@ components:
         email:
           type: string
           format: email
-          description: メールアドレス
-          maxLength: 255
+          description: メールアドレス（RFC 5321準拠、最大254文字）
+          maxLength: 254
           example: "yamada@example.com"
         password:
           type: string

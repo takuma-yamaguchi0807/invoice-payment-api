@@ -6,12 +6,20 @@ package com.example.invoicepaymentapi.domain.exception;
  */
 public record ValidationError(
         String field,
-        String messageKey
+        String messageKey,
+        Object[] messageArgs
 ) {
     /**
      * 必須エラーのメッセージキー
      */
     public static final String REQUIRED_MESSAGE_KEY = "validation.required";
+
+    /**
+     * パラメータなしでValidationErrorを作成
+     */
+    public ValidationError(String field, String messageKey) {
+        this(field, messageKey, null);
+    }
 
     /**
      * 必須エラーを作成

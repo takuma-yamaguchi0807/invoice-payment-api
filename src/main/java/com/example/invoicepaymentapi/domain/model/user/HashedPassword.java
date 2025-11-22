@@ -2,15 +2,12 @@ package com.example.invoicepaymentapi.domain.model.user;
 
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * ハッシュ化済みパスワード値オブジェクト
  * Argon2でハッシュ化されたパスワードを保持
  */
 public record HashedPassword(String value) {
-    private static final Logger log = LoggerFactory.getLogger(HashedPassword.class);
     private static final Argon2 ARGON2 = Argon2Factory.create();
 
     /**
@@ -29,11 +26,14 @@ public record HashedPassword(String value) {
 
     /**
      * 既存データ取得時のファクトリメソッド
-     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     * テーブルがNOT NULL制約のため、nullが来ることはない
+     *
+     * @param value ハッシュ化済みパスワード
+     * @throws IllegalArgumentException valueがnullの場合
      */
     public static HashedPassword reconstruct(String value) {
         if (value == null) {
-            log.error("HashedPassword cannot be null. Invalid data detected in database.");
+            throw new IllegalArgumentException("HashedPassword cannot be null");
         }
         return new HashedPassword(value);
     }
@@ -46,10 +46,6 @@ public record HashedPassword(String value) {
      * @return パスワードが一致する場合true、一致しない場合false
      */
     public boolean verify(Password rawPassword) {
-        if (this.value == null) {
-            log.warn("HashedPassword value is null. Cannot verify password.");
-            return false;
-        }
         if (rawPassword == null || rawPassword.value() == null) {
             return false;
         }

@@ -2,8 +2,7 @@ package com.example.invoicepaymentapi.domain.model.user;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +11,6 @@ import java.util.List;
  * 氏名値オブジェクト
  */
 public record UserName(String value) {
-    private static final Logger log = LoggerFactory.getLogger(UserName.class);
     private static final int MAX_LENGTH = 255;
 
     /**
@@ -37,11 +35,11 @@ public record UserName(String value) {
     public static List<ValidationError> validate(String value) {
         List<ValidationError> errors = new ArrayList<>();
 
-        if (value == null || value.isEmpty()) {
+        if (StringUtils.isEmpty(value)) {
             errors.add(ValidationError.required("userName"));
         } else {
             if (value.length() > MAX_LENGTH) {
-                errors.add(new ValidationError("userName", "validation.userName.maxLength"));
+                errors.add(new ValidationError("userName", "validation.maxLength", new Object[]{MAX_LENGTH}));
             }
         }
 
@@ -50,11 +48,14 @@ public record UserName(String value) {
 
     /**
      * 既存データ取得時のファクトリメソッド
-     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     * テーブルがNOT NULL制約のため、nullが来ることはない
+     *
+     * @param value 氏名
+     * @throws IllegalArgumentException valueがnullの場合
      */
     public static UserName reconstruct(String value) {
         if (value == null) {
-            log.error("UserName cannot be null. Invalid data detected in database.");
+            throw new IllegalArgumentException("UserName cannot be null");
         }
         return new UserName(value);
     }

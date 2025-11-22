@@ -5,6 +5,8 @@ import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 
@@ -88,17 +90,6 @@ class PasswordTest {
         }
 
         @Test
-        @DisplayName("reconstructメソッドでnullでも値オブジェクトを作成できる")
-        void shouldReconstructPasswordWithNull() {
-            // When
-            Password password = Password.reconstruct(null);
-
-            // Then
-            assertNotNull(password);
-            assertNull(password.value());
-        }
-
-        @Test
         @DisplayName("reconstructメソッドで有効なパスワードで値オブジェクトを作成できる")
         void shouldReconstructPasswordWithValidPassword() {
             // Given
@@ -171,28 +162,24 @@ class PasswordTest {
             assertEquals("validation.password.length", exception.getErrors().get(0).messageKey());
         }
 
-        @Test
+        @ParameterizedTest
+        @ValueSource(strings = {
+                "password", // 小文字のみ
+                "PASSWORD", // 大文字のみ
+                "12345678", // 数字のみ
+                "Password", // 大文字・小文字のみ（2種類）
+                "password123" // 小文字・数字のみ（2種類）
+        })
         @DisplayName("文字種が2種類以下のパスワードで作成しようとすると例外がスローされる")
-        void shouldThrowExceptionWhenCreatingPasswordWithLessThanThreeCharacterTypes() {
-            // Given
-            String[] invalidPasswords = {
-                    "password", // 小文字のみ
-                    "PASSWORD", // 大文字のみ
-                    "12345678", // 数字のみ
-                    "Password", // 大文字・小文字のみ（2種類）
-                    "password123" // 小文字・数字のみ（2種類）
-            };
-
-            for (String invalidPassword : invalidPasswords) {
-                // When & Then
-                DomainValidationException exception = assertThrows(
-                        DomainValidationException.class,
-                        () -> Password.create(invalidPassword)
-                );
-                assertFalse(exception.getErrors().isEmpty());
-                assertEquals("password", exception.getErrors().get(0).field());
-                assertEquals("validation.password.characterTypes", exception.getErrors().get(0).messageKey());
-            }
+        void shouldThrowExceptionWhenCreatingPasswordWithLessThanThreeCharacterTypes(String invalidPassword) {
+            // When & Then
+            DomainValidationException exception = assertThrows(
+                    DomainValidationException.class,
+                    () -> Password.create(invalidPassword)
+            );
+            assertFalse(exception.getErrors().isEmpty());
+            assertEquals("password", exception.getErrors().get(0).field());
+            assertEquals("validation.password.characterTypes", exception.getErrors().get(0).messageKey());
         }
 
         @Test
@@ -245,6 +232,17 @@ class PasswordTest {
             assertFalse(errors.isEmpty());
             assertEquals("password", errors.get(0).field());
             assertEquals("validation.password.characterTypes", errors.get(0).messageKey());
+        }
+
+        @Test
+        @DisplayName("reconstructメソッドでnullを渡すとIllegalArgumentExceptionがスローされる")
+        void shouldThrowIllegalArgumentExceptionWhenReconstructingWithNull() {
+            // When & Then
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> Password.reconstruct(null)
+            );
+            assertEquals("Password cannot be null", exception.getMessage());
         }
     }
 }

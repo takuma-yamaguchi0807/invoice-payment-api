@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
                         Collectors.mapping(
                                 error -> messageSource.getMessage(
                                         error.messageKey(),
-                                        null,
+                                        error.messageArgs() != null ? error.messageArgs() : new Object[0],
                                         error.messageKey(), // メッセージが見つからない場合はキーをそのまま返す
                                         locale
                                 ),

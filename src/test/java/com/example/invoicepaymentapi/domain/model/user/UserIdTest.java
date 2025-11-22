@@ -43,17 +43,6 @@ class UserIdTest {
         }
 
         @Test
-        @DisplayName("reconstructメソッドでnullでも値オブジェクトを作成できる")
-        void shouldReconstructUserIdWithNull() {
-            // When
-            UserId userId = UserId.reconstruct(null);
-
-            // Then
-            assertNotNull(userId);
-            assertNull(userId.value());
-        }
-
-        @Test
         @DisplayName("reconstructメソッドで有効な値で値オブジェクトを作成できる")
         void shouldReconstructUserIdWithValidValue() {
             // Given
@@ -142,6 +131,17 @@ class UserIdTest {
             assertFalse(errors.isEmpty());
             assertEquals("userId", errors.get(0).field());
             assertEquals("validation.userId.zeroOrNegative", errors.get(0).messageKey());
+        }
+
+        @Test
+        @DisplayName("reconstructメソッドでnullを渡すとIllegalArgumentExceptionがスローされる")
+        void shouldThrowIllegalArgumentExceptionWhenReconstructingWithNull() {
+            // When & Then
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> UserId.reconstruct(null)
+            );
+            assertEquals("UserId cannot be null", exception.getMessage());
         }
     }
 }

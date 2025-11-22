@@ -2,8 +2,7 @@ package com.example.invoicepaymentapi.domain.model.user;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.regex.Pattern;
  * 要件: 8文字以上、英大文字・小文字・数値・記号の4種のうち3種以上
  */
 public record Password(String value) {
-    private static final Logger log = LoggerFactory.getLogger(Password.class);
     private static final int MIN_LENGTH = 8;
 
     /**
@@ -39,7 +37,7 @@ public record Password(String value) {
     public static List<ValidationError> validate(String value) {
         List<ValidationError> errors = new ArrayList<>();
 
-        if (value == null || value.isEmpty()) {
+        if (StringUtils.isEmpty(value)) {
             errors.add(ValidationError.required("password"));
         } else {
             if (value.length() < MIN_LENGTH) {
@@ -55,11 +53,14 @@ public record Password(String value) {
 
     /**
      * 既存データ取得時のファクトリメソッド
-     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     * テーブルがNOT NULL制約のため、nullが来ることはない
+     *
+     * @param value パスワード
+     * @throws IllegalArgumentException valueがnullの場合
      */
     public static Password reconstruct(String value) {
         if (value == null) {
-            log.error("Password cannot be null. Invalid data detected in database.");
+            throw new IllegalArgumentException("Password cannot be null");
         }
         return new Password(value);
     }

@@ -2,8 +2,6 @@ package com.example.invoicepaymentapi.domain.model.invoice;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -16,7 +14,6 @@ import java.util.List;
  * 未来の日付のみ許可
  */
 public record PaymentDueDate(LocalDate value) {
-    private static final Logger log = LoggerFactory.getLogger(PaymentDueDate.class);
     /**
      * Stringから支払期日を作成（日付形式チェックを含む）
      * JSONリクエストやクエリパラメータから受け取った文字列をバリデーションして値オブジェクトを作成
@@ -31,19 +28,7 @@ public record PaymentDueDate(LocalDate value) {
             throw new DomainValidationException(errors);
         }
         LocalDate localDate = LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
-        return create(localDate);
-    }
-
-    /**
-     * 新規作成時のファクトリメソッド
-     * バリデーションを実施
-     */
-    public static PaymentDueDate create(LocalDate value) {
-        List<ValidationError> errors = validate(value.toString());
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-        return new PaymentDueDate(value);
+        return new PaymentDueDate(localDate);
     }
 
     /**
@@ -81,11 +66,14 @@ public record PaymentDueDate(LocalDate value) {
 
     /**
      * 既存データ取得時のファクトリメソッド
-     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     * テーブルがNOT NULL制約のため、nullが来ることはない
+     *
+     * @param value 支払期日
+     * @throws IllegalArgumentException valueがnullの場合
      */
     public static PaymentDueDate reconstruct(LocalDate value) {
         if (value == null) {
-            log.error("PaymentDueDate cannot be null. Invalid data detected in database.");
+            throw new IllegalArgumentException("PaymentDueDate cannot be null");
         }
         return new PaymentDueDate(value);
     }

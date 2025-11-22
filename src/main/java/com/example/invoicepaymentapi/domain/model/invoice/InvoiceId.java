@@ -2,8 +2,6 @@ package com.example.invoicepaymentapi.domain.model.invoice;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +10,6 @@ import java.util.List;
  * 請求書ID値オブジェクト
  */
 public record InvoiceId(Integer value) {
-    private static final Logger log = LoggerFactory.getLogger(InvoiceId.class);
     /**
      * 新規作成時のファクトリメソッド
      * バリデーションを実施
@@ -49,11 +46,14 @@ public record InvoiceId(Integer value) {
 
     /**
      * 既存データ取得時のファクトリメソッド
-     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     * テーブルがNOT NULL制約（PRIMARY KEY）のため、nullが来ることはない
+     *
+     * @param value 請求書ID
+     * @throws IllegalArgumentException valueがnullの場合
      */
     public static InvoiceId reconstruct(Integer value) {
         if (value == null) {
-            log.error("InvoiceId cannot be null. Invalid data detected in database.");
+            throw new IllegalArgumentException("InvoiceId cannot be null");
         }
         return new InvoiceId(value);
     }

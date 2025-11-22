@@ -75,17 +75,6 @@ class PaymentAmountTest {
         }
 
         @Test
-        @DisplayName("reconstructメソッドでnullでも値オブジェクトを作成できる")
-        void shouldReconstructPaymentAmountWithNull() {
-            // When
-            PaymentAmount paymentAmount = PaymentAmount.reconstruct(null);
-
-            // Then
-            assertNotNull(paymentAmount);
-            assertNull(paymentAmount.value());
-        }
-
-        @Test
         @DisplayName("reconstructメソッドで有効な値で値オブジェクトを作成できる")
         void shouldReconstructPaymentAmountWithValidValue() {
             // Given
@@ -139,7 +128,7 @@ class PaymentAmountTest {
         @DisplayName("0.01未満で支払金額を作成しようとすると例外がスローされる")
         void shouldThrowExceptionWhenCreatingPaymentAmountWithLessThanMinimum() {
             // Given
-            BigDecimal amount = new BigDecimal("0.009");
+            BigDecimal amount = new BigDecimal("0.005"); // 丸め込むと0.01未満になる値
 
             // When & Then
             DomainValidationException exception = assertThrows(
@@ -164,10 +153,10 @@ class PaymentAmountTest {
         }
 
         @Test
-        @DisplayName("小数部が3桁以上の場合にvalidateメソッドがエラーを返す")
-        void shouldReturnErrorWhenValidatingWithMoreThanTwoDecimalPlaces() {
+        @DisplayName("小数部が4桁以上の場合にvalidateメソッドがエラーを返す")
+        void shouldReturnErrorWhenValidatingWithMoreThanThreeDecimalPlaces() {
             // Given
-            BigDecimal amount = new BigDecimal("10000.999");
+            BigDecimal amount = new BigDecimal("10000.9999"); // 4桁
 
             // When
             List<ValidationError> errors = PaymentAmount.validate(amount);
@@ -202,6 +191,17 @@ class PaymentAmountTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("paymentAmount", errors.get(0).field());
+        }
+
+        @Test
+        @DisplayName("reconstructメソッドでnullを渡すとIllegalArgumentExceptionがスローされる")
+        void shouldThrowIllegalArgumentExceptionWhenReconstructingWithNull() {
+            // When & Then
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> PaymentAmount.reconstruct(null)
+            );
+            assertEquals("PaymentAmount cannot be null", exception.getMessage());
         }
     }
 }

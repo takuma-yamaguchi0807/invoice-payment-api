@@ -20,20 +20,6 @@ class PaymentDueDateTest {
     @DisplayName("正常系")
     class NormalCase {
         @Test
-        @DisplayName("有効な未来の日付で支払期日を作成できる")
-        void shouldCreatePaymentDueDateWithFutureDate() {
-            // Given
-            LocalDate futureDate = LocalDate.now().plusDays(1);
-
-            // When
-            PaymentDueDate paymentDueDate = PaymentDueDate.create(futureDate);
-
-            // Then
-            assertNotNull(paymentDueDate);
-            assertEquals(futureDate, paymentDueDate.value());
-        }
-
-        @Test
         @DisplayName("有効な未来の日付文字列から支払期日を作成できる")
         void shouldCreatePaymentDueDateFromString() {
             // Given
@@ -61,17 +47,6 @@ class PaymentDueDateTest {
         }
 
         @Test
-        @DisplayName("reconstructメソッドでnullでも値オブジェクトを作成できる")
-        void shouldReconstructPaymentDueDateWithNull() {
-            // When
-            PaymentDueDate paymentDueDate = PaymentDueDate.reconstruct(null);
-
-            // Then
-            assertNotNull(paymentDueDate);
-            assertNull(paymentDueDate.value());
-        }
-
-        @Test
         @DisplayName("reconstructメソッドで有効な日付で値オブジェクトを作成できる")
         void shouldReconstructPaymentDueDateWithValidDate() {
             // Given
@@ -89,50 +64,6 @@ class PaymentDueDateTest {
     @Nested
     @DisplayName("異常系")
     class AbnormalCase {
-        @Test
-        @DisplayName("今日の日付で支払期日を作成しようとすると例外がスローされる")
-        void shouldThrowExceptionWhenCreatingPaymentDueDateWithToday() {
-            // Given
-            LocalDate today = LocalDate.now();
-
-            // When & Then
-            DomainValidationException exception = assertThrows(
-                    DomainValidationException.class,
-                    () -> PaymentDueDate.create(today)
-            );
-            assertFalse(exception.getErrors().isEmpty());
-            assertEquals("paymentDueDate", exception.getErrors().get(0).field());
-            assertEquals("validation.paymentDueDate.notFuture", exception.getErrors().get(0).messageKey());
-        }
-
-        @Test
-        @DisplayName("過去の日付で支払期日を作成しようとすると例外がスローされる")
-        void shouldThrowExceptionWhenCreatingPaymentDueDateWithPastDate() {
-            // Given
-            LocalDate pastDate = LocalDate.now().minusDays(1);
-
-            // When & Then
-            DomainValidationException exception = assertThrows(
-                    DomainValidationException.class,
-                    () -> PaymentDueDate.create(pastDate)
-            );
-            assertFalse(exception.getErrors().isEmpty());
-            assertEquals("paymentDueDate", exception.getErrors().get(0).field());
-            assertEquals("validation.paymentDueDate.notFuture", exception.getErrors().get(0).messageKey());
-        }
-
-        @Test
-        @DisplayName("nullで支払期日を作成しようとすると例外がスローされる")
-        void shouldThrowExceptionWhenCreatingPaymentDueDateWithNull() {
-            // When & Then
-            DomainValidationException exception = assertThrows(
-                    DomainValidationException.class,
-                    () -> PaymentDueDate.create((LocalDate) null)
-            );
-            assertFalse(exception.getErrors().isEmpty());
-            assertEquals("paymentDueDate", exception.getErrors().get(0).field());
-        }
-
         @Test
         @DisplayName("空文字列で支払期日を作成しようとすると例外がスローされる")
         void shouldThrowExceptionWhenCreatingPaymentDueDateWithEmptyString() {
@@ -208,6 +139,17 @@ class PaymentDueDateTest {
             assertFalse(errors.isEmpty());
             assertEquals("paymentDueDate", errors.get(0).field());
             assertEquals("validation.paymentDueDate.notFuture", errors.get(0).messageKey());
+        }
+
+        @Test
+        @DisplayName("reconstructメソッドでnullを渡すとIllegalArgumentExceptionがスローされる")
+        void shouldThrowIllegalArgumentExceptionWhenReconstructingWithNull() {
+            // When & Then
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> PaymentDueDate.reconstruct(null)
+            );
+            assertEquals("PaymentDueDate cannot be null", exception.getMessage());
         }
     }
 }

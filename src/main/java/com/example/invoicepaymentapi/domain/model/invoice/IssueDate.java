@@ -2,8 +2,6 @@ package com.example.invoicepaymentapi.domain.model.invoice;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -16,7 +14,6 @@ import java.util.List;
  * 過去または今日のみ許可（未来は不可）
  */
 public record IssueDate(LocalDate value) {
-    private static final Logger log = LoggerFactory.getLogger(IssueDate.class);
     /**
      * Stringから発行日を作成（日付形式チェックを含む）
      * JSONリクエストやクエリパラメータから受け取った文字列をバリデーションして値オブジェクトを作成
@@ -31,19 +28,7 @@ public record IssueDate(LocalDate value) {
             throw new DomainValidationException(errors);
         }
         LocalDate localDate = LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
-        return create(localDate);
-    }
-
-    /**
-     * 新規作成時のファクトリメソッド
-     * バリデーションを実施
-     */
-    public static IssueDate create(LocalDate value) {
-        List<ValidationError> errors = validate(value.toString());
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-        return new IssueDate(value);
+        return new IssueDate(localDate);
     }
 
     /**
@@ -81,11 +66,14 @@ public record IssueDate(LocalDate value) {
 
     /**
      * 既存データ取得時のファクトリメソッド
-     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     * テーブルがNOT NULL制約のため、nullが来ることはない
+     *
+     * @param value 発行日
+     * @throws IllegalArgumentException valueがnullの場合
      */
     public static IssueDate reconstruct(LocalDate value) {
         if (value == null) {
-            log.error("IssueDate cannot be null. Invalid data detected in database.");
+            throw new IllegalArgumentException("IssueDate cannot be null");
         }
         return new IssueDate(value);
     }

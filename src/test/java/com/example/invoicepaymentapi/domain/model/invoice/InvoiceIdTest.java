@@ -43,17 +43,6 @@ class InvoiceIdTest {
         }
 
         @Test
-        @DisplayName("reconstructメソッドでnullでも値オブジェクトを作成できる")
-        void shouldReconstructInvoiceIdWithNull() {
-            // When
-            InvoiceId invoiceId = InvoiceId.reconstruct(null);
-
-            // Then
-            assertNotNull(invoiceId);
-            assertNull(invoiceId.value());
-        }
-
-        @Test
         @DisplayName("reconstructメソッドで有効な値で値オブジェクトを作成できる")
         void shouldReconstructInvoiceIdWithValidValue() {
             // Given
@@ -142,6 +131,17 @@ class InvoiceIdTest {
             assertFalse(errors.isEmpty());
             assertEquals("invoiceId", errors.get(0).field());
             assertEquals("validation.invoiceId.zeroOrNegative", errors.get(0).messageKey());
+        }
+
+        @Test
+        @DisplayName("reconstructメソッドでnullを渡すとIllegalArgumentExceptionがスローされる")
+        void shouldThrowIllegalArgumentExceptionWhenReconstructingWithNull() {
+            // When & Then
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> InvoiceId.reconstruct(null)
+            );
+            assertEquals("InvoiceId cannot be null", exception.getMessage());
         }
     }
 }

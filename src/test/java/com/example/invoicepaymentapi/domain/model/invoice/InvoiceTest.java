@@ -24,9 +24,9 @@ class InvoiceTest {
         void shouldCreateInvoiceWithValidValues() {
             // Given
             UserId userId = UserId.create(1);
-            IssueDate issueDate = IssueDate.create(LocalDate.now());
+            IssueDate issueDate = IssueDate.create(LocalDate.now().toString());
             PaymentAmount paymentAmount = PaymentAmount.create(new BigDecimal("10000.00"));
-            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30));
+            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30).toString());
 
             // When
             Invoice invoice = Invoice.create(userId, issueDate, paymentAmount, paymentDueDate);
@@ -52,9 +52,9 @@ class InvoiceTest {
         void shouldCalculateFeeCorrectly() {
             // Given
             UserId userId = UserId.create(1);
-            IssueDate issueDate = IssueDate.create(LocalDate.now());
+            IssueDate issueDate = IssueDate.create(LocalDate.now().toString());
             PaymentAmount paymentAmount = PaymentAmount.create(new BigDecimal("10000.00"));
-            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30));
+            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30).toString());
 
             // When
             Invoice invoice = Invoice.create(userId, issueDate, paymentAmount, paymentDueDate);
@@ -69,9 +69,9 @@ class InvoiceTest {
         void shouldCalculateTaxAmountCorrectly() {
             // Given
             UserId userId = UserId.create(1);
-            IssueDate issueDate = IssueDate.create(LocalDate.now());
+            IssueDate issueDate = IssueDate.create(LocalDate.now().toString());
             PaymentAmount paymentAmount = PaymentAmount.create(new BigDecimal("10000.00"));
-            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30));
+            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30).toString());
 
             // When
             Invoice invoice = Invoice.create(userId, issueDate, paymentAmount, paymentDueDate);
@@ -86,9 +86,9 @@ class InvoiceTest {
         void shouldCalculateTotalAmountCorrectly() {
             // Given
             UserId userId = UserId.create(1);
-            IssueDate issueDate = IssueDate.create(LocalDate.now());
+            IssueDate issueDate = IssueDate.create(LocalDate.now().toString());
             PaymentAmount paymentAmount = PaymentAmount.create(new BigDecimal("10000.00"));
-            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30));
+            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30).toString());
 
             // When
             Invoice invoice = Invoice.create(userId, issueDate, paymentAmount, paymentDueDate);
@@ -107,9 +107,9 @@ class InvoiceTest {
         void shouldSetCreatedAtAndUpdatedAt() {
             // Given
             UserId userId = UserId.create(1);
-            IssueDate issueDate = IssueDate.create(LocalDate.now());
+            IssueDate issueDate = IssueDate.create(LocalDate.now().toString());
             PaymentAmount paymentAmount = PaymentAmount.create(new BigDecimal("10000.00"));
-            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30));
+            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30).toString());
             LocalDateTime beforeCreation = LocalDateTime.now();
 
             // When
@@ -130,14 +130,14 @@ class InvoiceTest {
             // Given
             InvoiceId id = InvoiceId.reconstruct(1);
             UserId userId = UserId.create(1);
-            IssueDate issueDate = IssueDate.create(LocalDate.now());
+            IssueDate issueDate = IssueDate.create(LocalDate.now().toString());
             PaymentAmount paymentAmount = PaymentAmount.create(new BigDecimal("10000.00"));
             Fee fee = Fee.reconstruct(new BigDecimal("100.00"));
             FeeRate feeRate = FeeRate.reconstruct(new BigDecimal("0.01"));
             TaxAmount taxAmount = TaxAmount.reconstruct(new BigDecimal("10.00"));
             TaxRate taxRate = TaxRate.reconstruct(new BigDecimal("0.10"));
             TotalAmount totalAmount = TotalAmount.reconstruct(new BigDecimal("10110.00"));
-            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30));
+            PaymentDueDate paymentDueDate = PaymentDueDate.create(LocalDate.now().plusDays(30).toString());
             LocalDateTime createdAt = LocalDateTime.now().minusDays(1);
             LocalDateTime updatedAt = LocalDateTime.now();
 

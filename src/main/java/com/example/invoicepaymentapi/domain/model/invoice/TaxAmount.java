@@ -46,6 +46,7 @@ public record TaxAmount(BigDecimal value) {
     /**
      * バリデーションを実行し、エラーのリストを返す
      * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
+     * 丸め込み可能な値（小数部3桁以下）は許容し、丸め込み後の値で有効範囲をチェックする
      *
      * @param value 消費税
      * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
@@ -56,19 +57,23 @@ public record TaxAmount(BigDecimal value) {
         if (value == null) {
             errors.add(ValidationError.required("taxAmount"));
         } else {
-            // 負の値チェック
+            // 負の値チェック（丸め込み前の値でチェック）
             if (value.compareTo(BigDecimal.ZERO) < 0) {
                 errors.add(new ValidationError("taxAmount", "validation.taxAmount.negative"));
             }
 
-            // 精度チェック（DECIMAL(15,2) = 整数部13桁、小数部2桁）
-            BigDecimal scaled = value.setScale(SCALE, RoundingMode.DOWN);
-            if (scaled.compareTo(value) != 0) {
+            // 丸め込み後の値を計算
+            BigDecimal rounded = value.setScale(SCALE, RoundingMode.HALF_UP);
+
+            // 精度チェック（小数部が3桁以下であることを確認）
+            // 丸め込み可能な範囲内（3桁以下）なら許容
+            int scale = value.scale();
+            if (scale > 3) {
                 errors.add(new ValidationError("taxAmount", "validation.taxAmount.scale"));
             }
 
-            // 整数部の桁数チェック（15桁 - 2桁 = 13桁）
-            BigDecimal integerPart = value.setScale(0, RoundingMode.DOWN);
+            // 整数部の桁数チェック（丸め込み後の値でチェック、15桁 - 2桁 = 13桁）
+            BigDecimal integerPart = rounded.setScale(0, RoundingMode.DOWN);
             if (integerPart.precision() > 13) {
                 errors.add(new ValidationError("taxAmount", "validation.taxAmount.scale"));
             }
@@ -79,11 +84,14 @@ public record TaxAmount(BigDecimal value) {
 
     /**
      * 既存データ取得時のファクトリメソッド
-     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     * テーブルがNOT NULL制約のため、nullが来ることはない
+     *
+     * @param value 消費税
+     * @throws IllegalArgumentException valueがnullの場合
      */
     public static TaxAmount reconstruct(BigDecimal value) {
         if (value == null) {
-            return new TaxAmount(null);
+            throw new IllegalArgumentException("TaxAmount cannot be null");
         }
         BigDecimal normalized = value.setScale(SCALE, RoundingMode.HALF_UP);
         return new TaxAmount(normalized);

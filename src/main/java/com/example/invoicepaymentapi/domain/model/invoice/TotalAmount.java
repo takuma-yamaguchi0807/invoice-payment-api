@@ -2,8 +2,6 @@ package com.example.invoicepaymentapi.domain.model.invoice;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,7 +13,6 @@ import java.util.List;
  * DECIMAL(15,2)に対応
  */
 public record TotalAmount(BigDecimal value) {
-    private static final Logger log = LoggerFactory.getLogger(TotalAmount.class);
     private static final int SCALE = 2;
 
     /**
@@ -51,6 +48,7 @@ public record TotalAmount(BigDecimal value) {
     /**
      * バリデーションを実行し、エラーのリストを返す
      * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
+     * 丸め込み可能な値（小数部3桁以下）は許容し、丸め込み後の値で有効範囲をチェックする
      *
      * @param value 請求金額
      * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
@@ -61,19 +59,23 @@ public record TotalAmount(BigDecimal value) {
         if (value == null) {
             errors.add(ValidationError.required("totalAmount"));
         } else {
-            // 負の値チェック
+            // 負の値チェック（丸め込み前の値でチェック）
             if (value.compareTo(BigDecimal.ZERO) < 0) {
                 errors.add(new ValidationError("totalAmount", "validation.totalAmount.negative"));
             }
 
-            // 精度チェック（DECIMAL(15,2) = 整数部13桁、小数部2桁）
-            BigDecimal scaled = value.setScale(SCALE, RoundingMode.DOWN);
-            if (scaled.compareTo(value) != 0) {
+            // 丸め込み後の値を計算
+            BigDecimal rounded = value.setScale(SCALE, RoundingMode.HALF_UP);
+
+            // 精度チェック（小数部が3桁以下であることを確認）
+            // 丸め込み可能な範囲内（3桁以下）なら許容
+            int scale = value.scale();
+            if (scale > 3) {
                 errors.add(new ValidationError("totalAmount", "validation.totalAmount.scale"));
             }
 
-            // 整数部の桁数チェック（15桁 - 2桁 = 13桁）
-            BigDecimal integerPart = value.setScale(0, RoundingMode.DOWN);
+            // 整数部の桁数チェック（丸め込み後の値でチェック、15桁 - 2桁 = 13桁）
+            BigDecimal integerPart = rounded.setScale(0, RoundingMode.DOWN);
             if (integerPart.precision() > 13) {
                 errors.add(new ValidationError("totalAmount", "validation.totalAmount.scale"));
             }
@@ -84,12 +86,14 @@ public record TotalAmount(BigDecimal value) {
 
     /**
      * 既存データ取得時のファクトリメソッド
-     * nullの場合はエラーログを出力して、valueがnullの値オブジェクトを返す（不正データの可能性）
+     * テーブルがNOT NULL制約のため、nullが来ることはない
+     *
+     * @param value 請求金額
+     * @throws IllegalArgumentException valueがnullの場合
      */
     public static TotalAmount reconstruct(BigDecimal value) {
         if (value == null) {
-            log.error("TotalAmount cannot be null. Invalid data detected in database.");
-            return new TotalAmount(null);
+            throw new IllegalArgumentException("TotalAmount cannot be null");
         }
         BigDecimal normalized = value.setScale(SCALE, RoundingMode.HALF_UP);
         return new TotalAmount(normalized);

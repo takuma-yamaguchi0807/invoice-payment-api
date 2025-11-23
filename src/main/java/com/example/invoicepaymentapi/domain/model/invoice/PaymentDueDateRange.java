@@ -30,7 +30,7 @@ public record PaymentDueDateRange(PaymentDueDate from, PaymentDueDate to) {
         // デフォルト値の計算
         PaymentDueDate defaultFrom = PaymentDueDate.defaultFrom();
         String fromDateString = StringUtils.isEmpty(fromString)
-                ? defaultFrom.toString()
+                ? defaultFrom.value().toString()
                 : fromString;
 
         // 開始日のバリデーション
@@ -49,7 +49,7 @@ public record PaymentDueDateRange(PaymentDueDate from, PaymentDueDate to) {
         if (StringUtils.isEmpty(toString)) {
             // paymentDueFromが指定されている場合はその指定日から、未指定の場合はデフォルト開始日から1ヶ月後を計算
             PaymentDueDate defaultTo = PaymentDueDate.defaultTo(from);
-            toDateString = defaultTo.toString();
+            toDateString = defaultTo.value().toString();
         } else {
             toDateString = toString;
         }

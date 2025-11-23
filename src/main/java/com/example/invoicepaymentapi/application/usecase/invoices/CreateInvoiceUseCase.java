@@ -6,6 +6,7 @@ import com.example.invoicepaymentapi.domain.model.invoice.*;
 import com.example.invoicepaymentapi.domain.model.user.UserId;
 import com.example.invoicepaymentapi.domain.repository.InvoiceRepository;
 import com.example.invoicepaymentapi.domain.service.DomainValidationService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,12 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
  * 請求書登録ユースケース
  */
 @Service
+@RequiredArgsConstructor
 public class CreateInvoiceUseCase {
     private final InvoiceRepository invoiceRepository;
-
-    public CreateInvoiceUseCase(InvoiceRepository invoiceRepository) {
-        this.invoiceRepository = invoiceRepository;
-    }
 
     /**
      * 請求書を登録する

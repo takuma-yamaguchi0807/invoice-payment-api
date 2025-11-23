@@ -5,6 +5,7 @@ import com.example.invoicepaymentapi.application.usecase.invoices.ListInvoicesUs
 import com.example.invoicepaymentapi.application.usecase.invoices.dto.CreateInvoiceResponseDto;
 import com.example.invoicepaymentapi.application.usecase.invoices.dto.InvoiceListResponseDto;
 import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,17 +17,10 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/invoices")
+@RequiredArgsConstructor
 public class InvoiceController {
     private final CreateInvoiceUseCase createInvoiceUseCase;
     private final ListInvoicesUseCase listInvoicesUseCase;
-
-    public InvoiceController(
-            CreateInvoiceUseCase createInvoiceUseCase,
-            ListInvoicesUseCase listInvoicesUseCase
-    ) {
-        this.createInvoiceUseCase = createInvoiceUseCase;
-        this.listInvoicesUseCase = listInvoicesUseCase;
-    }
 
     /**
      * 請求書登録

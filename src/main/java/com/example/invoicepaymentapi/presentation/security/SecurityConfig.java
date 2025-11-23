@@ -36,8 +36,8 @@ public class SecurityConfig {
                 // 認証・認可の設定
                 .authorizeHttpRequests(auth -> auth
                         // 認証不要エンドポイント
-                        .requestMatchers("/auth/login").permitAll()
-                        .requestMatchers("/users").permitAll()
+                        .requestMatchers(ApiPaths.AUTH_LOGIN).permitAll()
+                        .requestMatchers(ApiPaths.USERS).permitAll()
                         // その他は認証必須
                         .anyRequest().authenticated())
                 // 認証エラーハンドラーを設定

@@ -27,8 +27,33 @@ import java.util.Date;
  */
 public record AccessToken(String value) {
     private static final Logger log = LoggerFactory.getLogger(AccessToken.class);
-    private static final String JWT_SECRET = System.getenv("JWT_SECRET");
-    private static final String JWT_EXPIRATION = System.getenv("JWT_EXPIRATION");
+    
+    /**
+     * システムプロパティから値を取得（spring-dotenvが.envファイルをシステムプロパティとして読み込んだ場合）
+     * 取得できない場合は起動時エラーをスロー
+     * 
+     * 注意: 静的フィールドの初期化はSpringのコンテキスト構築前に実行されるため、
+     * 遅延初期化（lazy initialization）を使用する
+     */
+    private static String getRequiredProperty(String key) {
+        String value = System.getProperty(key);
+        if (value == null || value.isEmpty()) {
+            value = System.getenv(key);
+        }
+        if (value == null || value.isEmpty()) {
+            throw new IllegalStateException(key + " environment variable is not set");
+        }
+        return value;
+    }
+    
+    // 遅延初期化: 実際に使用するときに値を取得する
+    private static String getJwtSecret() {
+        return getRequiredProperty("JWT_SECRET");
+    }
+    
+    private static String getJwtExpiration() {
+        return getRequiredProperty("JWT_EXPIRATION");
+    }
 
     /**
      * ユーザーIDからJWTアクセストークンを作成
@@ -41,21 +66,23 @@ public record AccessToken(String value) {
             throw new IllegalArgumentException("UserId cannot be null");
         }
 
-        if (StringUtils.isEmpty(JWT_EXPIRATION)) {
+        String jwtExpiration = getJwtExpiration();
+        if (StringUtils.isEmpty(jwtExpiration)) {
             throw new IllegalStateException("JWT_EXPIRATION environment variable is not set");
         }
 
         long expirationSeconds;
         try {
-            expirationSeconds = Long.parseLong(JWT_EXPIRATION);
+            expirationSeconds = Long.parseLong(jwtExpiration);
         } catch (NumberFormatException e) {
-            throw new IllegalStateException("JWT_EXPIRATION environment variable has invalid value: " + JWT_EXPIRATION, e);
+            throw new IllegalStateException("JWT_EXPIRATION environment variable has invalid value: " + jwtExpiration, e);
         }
 
-        if (StringUtils.isEmpty(JWT_SECRET)) {
+        String jwtSecret = getJwtSecret();
+        if (StringUtils.isEmpty(jwtSecret)) {
             throw new IllegalStateException("JWT_SECRET environment variable is not set");
         }
-        SecretKey key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         Instant now = Instant.now();
         Instant expiration = now.plus(expirationSeconds, ChronoUnit.SECONDS);
 
@@ -75,13 +102,12 @@ public record AccessToken(String value) {
      * 期限切れ、改ざん、形式不正などをチェックし、認証エラーの場合はUnauthorizedExceptionをスロー
      *
      * @param token JWT文字列
-     * @throws IllegalArgumentException トークンがnullまたは空の場合
      * @throws IllegalStateException JWT_SECRET環境変数が設定されていない場合（システム設定エラー）
-     * @throws UnauthorizedException JWT検証に失敗した場合（期限切れ、改ざん、形式不正など）
+     * @throws UnauthorizedException トークンがnullまたは空の場合、またはJWT検証に失敗した場合（期限切れ、改ざん、形式不正など）
      */
     public static void validate(String token) {
         if (StringUtils.isEmpty(token)) {
-            throw new IllegalArgumentException("JWT token cannot be null or empty");
+            throw new UnauthorizedException("JWT token is required");
         }
 
         try {
@@ -147,10 +173,11 @@ public record AccessToken(String value) {
      * @throws Exception JWT検証に失敗した場合
      */
     private static Jws<Claims> parseSignedClaims(String token) {
-        if (StringUtils.isEmpty(JWT_SECRET)) {
+        String jwtSecret = getJwtSecret();
+        if (StringUtils.isEmpty(jwtSecret)) {
             throw new IllegalStateException("JWT_SECRET environment variable is not set");
         }
-        SecretKey key = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         return Jwts.parser()
                 .verifyWith(key)
                 .build()

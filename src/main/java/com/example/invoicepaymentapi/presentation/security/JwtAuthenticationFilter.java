@@ -1,5 +1,6 @@
 package com.example.invoicepaymentapi.presentation.security;
 
+import com.example.invoicepaymentapi.domain.exception.UnauthorizedException;
 import com.example.invoicepaymentapi.domain.model.auth.AccessToken;
 import com.example.invoicepaymentapi.domain.model.user.UserId;
 import jakarta.servlet.FilterChain;
@@ -10,8 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -37,12 +39,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         try {
             String token = extractToken(request);
-            if (token != null) {
-                Authentication authentication = authenticate(token);
-                if (authentication != null) {
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+            Authentication authentication = authenticate(token);
+            if (authentication != null) {
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+        } catch (UnauthorizedException e) {
+            // UnauthorizedExceptionをAuthenticationExceptionに変換してSecurityExceptionHandlerに処理を委譲
+            throw new AuthenticationCredentialsNotFoundException(e.getMessage(), e);
+        } catch (AuthenticationException e) {
+            // AuthenticationExceptionは再スローしてSecurityExceptionHandlerに処理を委譲
+            // フィルターチェーンは中断されるため、filterChain.doFilterは呼ばない
+            throw e;
         } catch (Exception e) {
             log.debug("JWT authentication failed: {}", e.getMessage());
             // 認証失敗時はSecurityContextに認証情報を設定しない
@@ -68,11 +75,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * JWTトークンを検証し、認証情報を作成
+     * tokenがnullの場合は何もせずnullを返す（SecurityConfigのpermitAll()に委譲）
      *
      * @param token JWTトークン
-     * @return 認証情報（検証失敗時はnull）
+     * @return 認証情報（tokenがnullまたは検証失敗時はnull）
      */
     private Authentication authenticate(String token) {
+        // tokenがnullの場合は何もせずnullを返す
+        // SecurityConfigのpermitAll()で公開エンドポイントは許可される
+        if (token == null) {
+            return null;
+        }
+
         try {
             // JWTトークンを検証
             AccessToken.validate(token);
@@ -81,12 +95,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             AccessToken accessToken = new AccessToken(token);
             UserId userId = accessToken.extractUserId();
 
-            // 認証情報を作成（権限は現時点ではROLE_USERのみ）
+            // 認証情報を作成（権限は現時点では不要）
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             userId.value(),
                             null,
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                            Collections.emptyList()
                     );
 
             return authentication;

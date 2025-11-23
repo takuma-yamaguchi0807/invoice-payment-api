@@ -41,7 +41,7 @@ public class InvoiceController {
     /**
      * 請求書一覧取得
      *
-     * @param paymentDueFrom 支払期日の開始日（未指定時は当日をデフォルト）
+     * @param paymentDueFrom 支払期日の開始日（未指定時は明日をデフォルト）
      * @param paymentDueTo 支払期日の終了日（未指定時は1ヶ月後をデフォルト）
      * @param pageNumber ページ番号（未指定時は1をデフォルト）
      * @param pageSize ページサイズ（未指定時は20をデフォルト）

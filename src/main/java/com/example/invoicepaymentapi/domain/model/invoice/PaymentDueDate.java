@@ -9,6 +9,8 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * 支払期日値オブジェクト
  * 未来の日付のみ許可
@@ -42,7 +44,7 @@ public record PaymentDueDate(LocalDate value) {
     public static List<ValidationError> validate(String value) {
         List<ValidationError> errors = new ArrayList<>();
 
-        if (value == null || value.isEmpty()) {
+        if (StringUtils.isEmpty(value)) {
             errors.add(ValidationError.required("paymentDueDate"));
             return errors;
         }
@@ -62,6 +64,28 @@ public record PaymentDueDate(LocalDate value) {
         }
 
         return errors;
+    }
+
+    /**
+     * 一覧取得のクエリパラメータ用デフォルト開始日を取得
+     * 要件「未来の支払期日の請求書データ」を考慮し、明日をデフォルトとする
+     * 支払期日は「未来の日付のみ」という制約があるため、今日の請求書は存在しない
+     *
+     * @return デフォルト開始日（明日）の値オブジェクト
+     */
+    public static PaymentDueDate defaultFrom() {
+        return reconstruct(LocalDate.now().plusDays(1));
+    }
+
+    /**
+     * 一覧取得のクエリパラメータ用デフォルト終了日を取得
+     * 要件「現金の支出を最大一ヶ月遅らせることができる」を考慮し、開始日から1ヶ月後をデフォルトとする
+     *
+     * @param from 開始日の値オブジェクト
+     * @return デフォルト終了日（開始日から1ヶ月後）の値オブジェクト
+     */
+    public static PaymentDueDate defaultTo(PaymentDueDate from) {
+        return reconstruct(from.value().plusMonths(1));
     }
 
     /**

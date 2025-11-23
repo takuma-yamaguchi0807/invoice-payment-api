@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * 発行日値オブジェクト
@@ -42,7 +43,7 @@ public record IssueDate(LocalDate value) {
     public static List<ValidationError> validate(String value) {
         List<ValidationError> errors = new ArrayList<>();
 
-        if (value == null || value.isEmpty()) {
+        if (StringUtils.isBlank(value)) {
             errors.add(ValidationError.required("issueDate"));
             return errors;
         }

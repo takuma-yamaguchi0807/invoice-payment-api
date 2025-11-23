@@ -241,14 +241,14 @@ paths:
       parameters:
         - name: paymentDueFrom
           in: query
-          description: 支払期日の開始日（未指定時は当日をデフォルトとする）
+          description: 支払期日の開始日（未指定時は明日をデフォルトとする）
           schema:
             type: string
             format: date
           example: "2024-01-01"
         - name: paymentDueTo
           in: query
-          description: 支払期日の終了日（未指定時は1ヶ月後をデフォルトとする。paymentDueFromが未指定の場合は当日から1ヶ月後、paymentDueFromが指定されている場合は指定日から1ヶ月後）
+          description: 支払期日の終了日（未指定時は1ヶ月後をデフォルトとする。paymentDueFromが未指定の場合は明日から1ヶ月後、paymentDueFromが指定されている場合は指定日から1ヶ月後）
           schema:
             type: string
             format: date

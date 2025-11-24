@@ -39,6 +39,7 @@ public record PaymentDueDateRange(PaymentDueDate from, PaymentDueDate to) {
     /**
      * 相関チェック（from <= to）を実行し、エラーのリストを返す
      * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
+     * エラーがある場合、fromとtoの両方のフィールドにエラーを追加する
      *
      * @param from 開始日の値オブジェクト
      * @param to 終了日の値オブジェクト
@@ -47,6 +48,10 @@ public record PaymentDueDateRange(PaymentDueDate from, PaymentDueDate to) {
     public static List<ValidationError> validateRange(PaymentDueDate from, PaymentDueDate to) {
         List<ValidationError> errors = new ArrayList<>();
         if (from.value().isAfter(to.value())) {
+            errors.add(new ValidationError(
+                    ApiPropertyNames.PAYMENT_DUE_FROM,
+                    "validation.paymentDueTo.range"
+            ));
             errors.add(new ValidationError(
                     ApiPropertyNames.PAYMENT_DUE_TO,
                     "validation.paymentDueTo.range"

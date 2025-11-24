@@ -4,7 +4,6 @@ import com.example.invoicepaymentapi.application.usecase.invoices.dto.InvoiceLis
 import com.example.invoicepaymentapi.domain.model.invoice.PaymentDueDateRange;
 import com.example.invoicepaymentapi.domain.model.user.UserId;
 import com.example.invoicepaymentapi.domain.repository.InvoiceRepository;
-import com.example.invoicepaymentapi.domain.service.DomainValidationService;
 import com.example.invoicepaymentapi.domain.shared.pagination.Pagination;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -46,19 +45,11 @@ public class ListInvoicesUseCase {
         // 支払期日範囲の作成（デフォルト値計算・バリデーション・値オブジェクト生成を一括処理）
         PaymentDueDateRange dateRange = PaymentDueDateRange.create(paymentDueFrom, paymentDueTo);
 
-        // ページネーションパラメータのデフォルト値設定とバリデーション
-        Integer pageNumberValue = pageNumber != null ? pageNumber : PageNumber.DEFAULT_VALUE;
-        Integer pageSizeValue = pageSize != null ? pageSize : PageSize.DEFAULT_VALUE;
-
-        DomainValidationService.validateAll(
-                () -> PageNumber.validate(pageNumberValue),
-                () -> PageSize.validate(pageSizeValue)
-        );
-
-        // 値オブジェクトの作成
+        // ページネーションパラメータの値オブジェクト作成（nullの場合はデフォルト値を使用）
+        // ofCreateOrDefaultメソッドがデフォルト値適用とバリデーションを一括処理する
         UserId userIdVo = UserId.create(userId);
-        PageNumber pageNumberVo = PageNumber.create(pageNumberValue);
-        PageSize pageSizeVo = PageSize.create(pageSizeValue);
+        PageNumber pageNumberVo = PageNumber.ofCreateOrDefault(pageNumber);
+        PageSize pageSizeVo = PageSize.ofCreateOrDefault(pageSize);
         Pagination pagination = new Pagination(pageNumberVo, pageSizeVo);
 
         // 請求書一覧を取得

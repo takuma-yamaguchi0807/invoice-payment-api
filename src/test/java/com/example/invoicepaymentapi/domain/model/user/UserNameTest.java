@@ -2,6 +2,7 @@ package com.example.invoicepaymentapi.domain.model.user;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -86,7 +87,7 @@ class UserNameTest {
                     () -> UserName.create(null)
             );
             assertFalse(exception.getErrors().isEmpty());
-            assertEquals("userName", exception.getErrors().get(0).field());
+            assertEquals(ApiPropertyNames.NAME, exception.getErrors().get(0).field());
         }
 
         @Test
@@ -98,7 +99,7 @@ class UserNameTest {
                     () -> UserName.create("")
             );
             assertFalse(exception.getErrors().isEmpty());
-            assertEquals("userName", exception.getErrors().get(0).field());
+            assertEquals(ApiPropertyNames.NAME, exception.getErrors().get(0).field());
         }
 
         @Test
@@ -113,7 +114,7 @@ class UserNameTest {
                     () -> UserName.create(name)
             );
             assertFalse(exception.getErrors().isEmpty());
-            assertEquals("userName", exception.getErrors().get(0).field());
+            assertEquals(ApiPropertyNames.NAME, exception.getErrors().get(0).field());
             assertEquals("validation.maxLength", exception.getErrors().get(0).messageKey());
         }
 
@@ -125,7 +126,7 @@ class UserNameTest {
 
             // Then
             assertFalse(errors.isEmpty());
-            assertEquals("userName", errors.get(0).field());
+            assertEquals(ApiPropertyNames.NAME, errors.get(0).field());
         }
 
         @Test
@@ -136,7 +137,7 @@ class UserNameTest {
 
             // Then
             assertFalse(errors.isEmpty());
-            assertEquals("userName", errors.get(0).field());
+            assertEquals(ApiPropertyNames.NAME, errors.get(0).field());
         }
 
         @Test
@@ -150,7 +151,7 @@ class UserNameTest {
 
             // Then
             assertFalse(errors.isEmpty());
-            assertEquals("userName", errors.get(0).field());
+            assertEquals(ApiPropertyNames.NAME, errors.get(0).field());
             assertEquals("validation.maxLength", errors.get(0).messageKey());
         }
 

@@ -69,15 +69,25 @@ public class GlobalExceptionHandler {
      * リソース競合例外をハンドリング
      *
      * @param ex リソース競合例外
+     * @param locale ロケール
      * @return ConflictErrorResponse
      */
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ConflictErrorResponse> handleConflictException(
-            ConflictException ex
+            ConflictException ex,
+            Locale locale
     ) {
+        // 例外からメッセージキーを取得し、メッセージプロパティから日本語メッセージを取得
+        String message = messageSource.getMessage(
+                ex.getMessageKey(),
+                null,
+                ex.getMessageKey(), // メッセージが見つからない場合はキーをそのまま返す
+                locale
+        );
+
         ConflictErrorResponse response = new ConflictErrorResponse(
                 ConflictErrorResponse.CONFLICT_ERROR_CODE,
-                ex.getMessage()
+                message
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);

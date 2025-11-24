@@ -30,16 +30,16 @@ public class CreateInvoiceUseCase {
     public CreateInvoiceResponseDto execute(Integer userId, CreateInvoiceRequestDto requestDto) {
         // 全フィールドのバリデーションを一括で実行
         DomainValidationService.validateAll(
-            () -> IssueDate.validate(requestDto.issueDate().toString()),
+            () -> IssueDate.validate(requestDto.issueDate()),
             () -> PaymentAmount.validate(requestDto.paymentAmount()),
-            () -> PaymentDueDate.validate(requestDto.paymentDueDate().toString())
+            () -> PaymentDueDate.validate(requestDto.paymentDueDate())
         );
 
         // バリデーション成功後、値オブジェクトを作成
         UserId userIdVo = UserId.create(userId);
-        IssueDate issueDate = IssueDate.create(requestDto.issueDate().toString());
+        IssueDate issueDate = IssueDate.create(requestDto.issueDate());
         PaymentAmount paymentAmount = PaymentAmount.create(requestDto.paymentAmount());
-        PaymentDueDate paymentDueDate = PaymentDueDate.create(requestDto.paymentDueDate().toString());
+        PaymentDueDate paymentDueDate = PaymentDueDate.create(requestDto.paymentDueDate());
 
         // 請求書集約ルートを作成（手数料・消費税・請求金額は自動計算される）
         Invoice invoice = Invoice.create(userIdVo, issueDate, paymentAmount, paymentDueDate);

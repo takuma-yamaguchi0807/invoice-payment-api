@@ -5,18 +5,19 @@ import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 /**
  * 請求書登録リクエスト
+ * Presentation層ではJSONから受け取る値をStringとして扱う
+ * Domain層の値オブジェクトでバリデーションと変換を行う
  */
 public record CreateInvoiceRequest(
         @JsonProperty(ApiPropertyNames.ISSUE_DATE)
-        LocalDate issueDate,
+        String issueDate,
         @JsonProperty(ApiPropertyNames.PAYMENT_AMOUNT)
         BigDecimal paymentAmount,
         @JsonProperty(ApiPropertyNames.PAYMENT_DUE_DATE)
-        LocalDate paymentDueDate
+        String paymentDueDate
 ) {
     /**
      * application層のDTOに変換

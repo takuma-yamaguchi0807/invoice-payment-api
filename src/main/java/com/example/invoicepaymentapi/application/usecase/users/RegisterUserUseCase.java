@@ -42,7 +42,7 @@ public class RegisterUserUseCase {
 
         // メールアドレスの重複チェック
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new ConflictException("Email already exists: " + email.value());
+            throw new ConflictException("error.conflict.email.exists");
         }
 
         // パスワードをハッシュ化

@@ -4,12 +4,15 @@ import com.example.invoicepaymentapi.application.usecase.auth.dto.LoginRequestDt
 import com.example.invoicepaymentapi.application.usecase.auth.dto.LoginResponseDto;
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.UnauthorizedException;
+import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import com.example.invoicepaymentapi.domain.model.auth.AccessToken;
 import com.example.invoicepaymentapi.domain.model.user.*;
 import com.example.invoicepaymentapi.domain.repository.UserRepository;
-import com.example.invoicepaymentapi.domain.service.DomainValidationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ログインユースケース
@@ -32,11 +35,26 @@ public class LoginUseCase {
      */
     @Transactional(readOnly = true)
     public LoginResponseDto execute(LoginRequestDto requestDto) {
-        // 全フィールドのバリデーションを一括で実行
-        DomainValidationService.validateAll(
-                () -> Email.validate(requestDto.email()),
-                () -> Password.validate(requestDto.password())
-        );
+        // バリデーションを実行（必須フィールドチェックと形式チェックを分離）
+        List<ValidationError> emailErrors = Email.validate(requestDto.email());
+        List<ValidationError> passwordErrors = Password.validate(requestDto.password());
+        
+        // 必須フィールド不足のエラーをチェック
+        boolean hasRequiredFieldErrors = emailErrors.stream().anyMatch(e -> e.messageKey().equals(ValidationError.REQUIRED_MESSAGE_KEY))
+                || passwordErrors.stream().anyMatch(e -> e.messageKey().equals(ValidationError.REQUIRED_MESSAGE_KEY));
+        
+        // 必須フィールド不足の場合は400エラーとして返す
+        if (hasRequiredFieldErrors) {
+            List<ValidationError> allErrors = new ArrayList<>();
+            allErrors.addAll(emailErrors);
+            allErrors.addAll(passwordErrors);
+            throw new DomainValidationException(allErrors);
+        }
+        
+        // 形式エラーの場合は401エラーとして返す（セキュリティ上の理由）
+        if (!emailErrors.isEmpty() || !passwordErrors.isEmpty()) {
+            throw new UnauthorizedException("Invalid email or password");
+        }
 
         // バリデーション成功後、値オブジェクトを作成
         Email email = Email.create(requestDto.email());

@@ -1,5 +1,7 @@
 # agent.md（AI 駆動開発ガイドライン）
 
+Always answer and review in Japanese.
+
 ## 1. プロジェクト構成方針
 
 本プロジェクトは **DDD（Domain-Driven Design）** を基本とする。  

@@ -64,13 +64,13 @@ cp env.example.txt .env
 java -jar build/libs/invoice-payment-api-1.0.0.jar
 ```
 
-アプリケーションは `http://localhost:8080/api` で起動します。
+アプリケーションは `http://localhost:8080/api/v1` で起動します。
 
 ### 4. 動作確認
 
 ```bash
 # ヘルスチェック（アプリケーションが起動している場合）
-curl http://localhost:8080/api
+curl http://localhost:8080/api/v1
 ```
 
 ### 停止方法
@@ -94,17 +94,23 @@ com.example.invoicepaymentapi
 ├── domain/              # ドメイン層
 │   ├── model/          # エンティティ、値オブジェクト
 │   ├── repository/     # リポジトリインターフェース
-│   └── service/        # ドメインサービス
+│   ├── service/        # ドメインサービス
+│   ├── exception/      # ドメイン例外
+│   └── shared/         # 共有値オブジェクト
 ├── application/         # アプリケーション層
-│   ├── usecase/        # ユースケース
-│   ├── dto/            # データ転送オブジェクト
-│   └── service/        # アプリケーションサービス
+│   └── usecase/        # ユースケース
+│       ├── auth/       # 認証ユースケース
+│       ├── invoices/   # 請求書ユースケース
+│       └── users/       # ユーザーユースケース
 ├── presentation/        # プレゼンテーション層
-│   ├── web/            # RESTコントローラー
+│   ├── web/            # RESTコントローラー、リクエスト/レスポンス
 │   ├── security/       # 認証・認可実装
-│   └── config/         # 設定クラス
+│   ├── exception/      # 例外ハンドラー
+│   └── error/          # エラーレスポンス
 ├── infrastructure/      # インフラ層
-│   └── persistence/    # データベース実装
+│   ├── repository/    # リポジトリ実装
+│   ├── entity/         # JPAエンティティ
+│   └── config/         # 設定クラス
 └── InvoicePaymentApiApplication.java
 ```
 
@@ -115,14 +121,8 @@ com.example.invoicepaymentapi
 - **プレゼンテーション層**: HTTP リクエスト/レスポンスの処理。REST コントローラー、認証・認可、設定クラスを配置
 - **インフラ層**: データベースアクセスなど、外部システムとの連携。リポジトリの実装を配置
 
-### 依存方向
-
-外側の層は内側の層に依存し、逆方向の依存は禁止されています。  
-これにより、ドメインロジックがインフラ層の変更に影響されない設計となっています。
-
 ## ドキュメント
 
 - **[API 仕様書](docs/openapi.yml)**: OpenAPI 3.0 形式の API 仕様
 - **[設計意図](docs/architect.md)**: 各 API の設計意図と決定事項
-- **[データベーススキーマ](docs/db.md)**: データベーステーブル定義
 - **[開発ガイドライン](AGENTS.md)**: AI 駆動開発におけるガイドライン

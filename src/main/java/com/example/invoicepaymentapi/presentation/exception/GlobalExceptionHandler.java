@@ -5,8 +5,11 @@ import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.UnauthorizedException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import com.example.invoicepaymentapi.presentation.error.ConflictErrorResponse;
+import com.example.invoicepaymentapi.presentation.error.InternalServerErrorResponse;
 import com.example.invoicepaymentapi.presentation.error.UnauthorizedErrorResponse;
 import com.example.invoicepaymentapi.presentation.error.ValidationErrorResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private final MessageSource messageSource;
 
     public GlobalExceptionHandler(MessageSource messageSource) {
@@ -119,6 +123,36 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    /**
+     * 予期しない例外をハンドリング
+     * すべての未処理例外をキャッチして500エラーを返す
+     *
+     * @param ex 予期しない例外
+     * @param locale ロケール
+     * @return InternalServerErrorResponse
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<InternalServerErrorResponse> handleException(
+            Exception ex,
+            Locale locale
+    ) {
+        log.error("Unexpected error occurred", ex);
+
+        String message = messageSource.getMessage(
+                "error.internalServerError",
+                null,
+                "error.internalServerError", // メッセージが見つからない場合はキーをそのまま返す
+                locale
+        );
+
+        InternalServerErrorResponse response = new InternalServerErrorResponse(
+                InternalServerErrorResponse.INTERNAL_SERVER_ERROR_CODE,
+                message
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
 

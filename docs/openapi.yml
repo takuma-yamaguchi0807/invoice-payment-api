@@ -93,6 +93,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ConflictErrorResponse"
+        "500":
+          # サーバー内部エラー
+          # 予期しない例外が発生した場合
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalServerErrorResponse"
   /auth/login:
     # ログインAPI
     # メールアドレスとパスワードによる認証を行い、成功時にJWTトークンを発行する
@@ -146,6 +154,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedErrorResponse"
+        "500":
+          # サーバー内部エラー
+          # 予期しない例外が発生した場合
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalServerErrorResponse"
   /invoices:
     post:
       security:
@@ -229,6 +245,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedErrorResponse"
+        "500":
+          # サーバー内部エラー
+          # 予期しない例外が発生した場合
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalServerErrorResponse"
     # 請求書一覧取得API
     # 指定期間内に支払いが発生する請求書データの一覧を取得する
     # クエリパラメータ名について: "date"と"due"は言葉のニュアンスが近いため同時に使わない。
@@ -337,6 +361,8 @@ paths:
                   value:
                     code: "VALIDATION_ERROR"
                     details:
+                      paymentDueFrom:
+                        - "支払期日の終了日は開始日より後の日付にしてください"
                       paymentDueTo:
                         - "支払期日の終了日は開始日より後の日付にしてください"
                 multipleErrors:
@@ -358,6 +384,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedErrorResponse"
+        "500":
+          # サーバー内部エラー
+          # 予期しない例外が発生した場合
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalServerErrorResponse"
 components:
   securitySchemes:
     BearerAuth:
@@ -476,6 +510,22 @@ components:
           type: string
           description: エラーメッセージ
           example: "メールアドレスは既に登録されています"
+    InternalServerErrorResponse:
+      # サーバー内部エラーレスポンス
+      # 予期しない例外が発生した場合に返す
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: エラーコード
+          example: "INTERNAL_SERVER_ERROR"
+        message:
+          type: string
+          description: エラーメッセージ
+          example: "サーバー内部エラーが発生しました"
     CreateInvoiceRequest:
       # 請求書登録リクエスト
       type: object

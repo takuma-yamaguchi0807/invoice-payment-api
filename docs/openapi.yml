@@ -1,0 +1,581 @@
+openapi: 3.0.3
+info:
+  title: Invoice Payment API
+  version: 1.0.0
+servers:
+  - url: /api/v1
+paths:
+  /users:
+    # ユーザー登録API
+    # ユーザー情報からユーザーを作成する
+    # レスポンスボディは返さない（ユーザー登録後にIDを使用するAPIがないため）
+    post:
+      summary: ユーザー登録
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserRequest"
+            example:
+              companyName: "株式会社サンプル"
+              name: "山田太郎"
+              email: "yamada@example.com"
+              password: "Password123!"
+      responses:
+        "201":
+          description: Created
+        "400":
+          # バリデーションエラー
+          # プロパティ毎のエラー詳細を返すため、details配列を使用
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+              examples:
+                missingRequiredFields:
+                  summary: 必須フィールドが不足している場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      companyName:
+                        - "入力してください"
+                      name:
+                        - "入力してください"
+                      email:
+                        - "入力してください"
+                      password:
+                        - "入力してください"
+                invalidEmailFormat:
+                  summary: メールアドレス形式エラー
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      email:
+                        - "メールアドレスの形式が正しくありません"
+                invalidPasswordFormat:
+                  summary: パスワード形式エラー
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      password:
+                        - "パスワードは8文字以上にしてください"
+                        - "パスワードは英大文字・小文字・数値・記号の4種のうち3種以上を含めてください"
+                invalidMaxLength:
+                  summary: 文字数制限エラー（最大長を超える場合）
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      companyName:
+                        - "255文字以内にしてください"
+                      name:
+                        - "255文字以内にしてください"
+                      email:
+                        - "254文字以内にしてください"
+                multipleErrors:
+                  summary: 複数フィールドで複数エラーが発生する場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      companyName:
+                        - "入力してください"
+                      email:
+                        - "メールアドレスの形式が正しくありません"
+                      password:
+                        - "パスワードは8文字以上にしてください"
+        "409":
+          # コンフリクトエラー
+          # emailが既に存在する場合（UNIQUE制約違反）
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictErrorResponse"
+  /auth/login:
+    # ログインAPI
+    # メールアドレスとパスワードによる認証を行い、成功時にJWTトークンを発行する
+    post:
+      summary: ログイン
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: "yamada@example.com"
+              password: "Password123!"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+              example:
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjF9.example"
+        "400":
+          # 必須フィールドのバリデーションエラー
+          # セキュリティ上の理由により、メール形式エラーやパスワード形式エラーは401として返す
+          # 必須フィールドが不足している場合のみ400を返す
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+              examples:
+                missingRequiredFields:
+                  summary: 必須フィールドが不足している場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      email:
+                        - "入力してください"
+                      password:
+                        - "入力してください"
+        "401":
+          # 認証エラー
+          # セキュリティ上の理由により、メール形式エラー、パスワード形式エラー、
+          # 認証情報不一致など、すべての認証失敗ケースに対して同一の401レスポンスを返す。
+          # 攻撃者にどの情報が正しく、どの情報が間違っているかを推測させないため。
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedErrorResponse"
+  /invoices:
+    post:
+      security:
+        - BearerAuth: []
+      summary: 請求書登録
+      operationId: createInvoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvoiceRequest"
+            example:
+              issueDate: "2024-01-15"
+              paymentAmount: 10000.00
+              paymentDueDate: "2024-02-15"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateInvoiceResponse"
+              example:
+                id: 1
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+              examples:
+                invalidDate:
+                  summary: 発行日が未来の場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      issueDate:
+                        - "過去または今日の日付にしてください"
+                invalidDueDate:
+                  summary: 支払期日が過去または今日の場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentDueDate:
+                        - "未来の日付にしてください"
+                invalidAmount:
+                  summary: 支払金額が0.01未満の場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentAmount:
+                        - "0.01以上にしてください"
+                invalidAmountMaxIntegerDigits:
+                  summary: 支払金額の整数部が13桁を超える場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentAmount:
+                        - "整数部が13桁を超えています"
+                invalidDateFormat:
+                  summary: 日付形式エラー
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      issueDate:
+                        - "日付の形式が正しくありません"
+                multipleErrors:
+                  summary: 複数フィールドで複数エラーが発生する場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentAmount:
+                        - "入力してください"
+                        - "0.01以上にしてください"
+                      issueDate:
+                        - "過去または今日の日付にしてください"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedErrorResponse"
+    # 請求書一覧取得API
+    # 指定期間内に支払いが発生する請求書データの一覧を取得する
+    # クエリパラメータ名について: "date"と"due"は言葉のニュアンスが近いため同時に使わない。
+    # "startDate"や"endDate"だと何の日付か不明確になるため、"paymentDueFrom"/"paymentDueTo"を使用。
+    get:
+      security:
+        - BearerAuth: []
+      summary: 請求書一覧取得
+      operationId: listInvoices
+      parameters:
+        - name: paymentDueFrom
+          in: query
+          description: 支払期日の開始日（未指定時は明日をデフォルトとする）
+          schema:
+            type: string
+            format: date
+          example: "2024-01-01"
+        - name: paymentDueTo
+          in: query
+          description: 支払期日の終了日（未指定時は1ヶ月後をデフォルトとする。paymentDueFromが未指定の場合は明日から1ヶ月後、paymentDueFromが指定されている場合は指定日から1ヶ月後）
+          schema:
+            type: string
+            format: date
+          example: "2024-02-01"
+        - name: page_number
+          in: query
+          description: ページ番号（1から始まる）
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          description: 1ページあたりの件数
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceListResponse"
+              example:
+                items:
+                  - id: 1
+                    issueDate: "2024-01-15"
+                    paymentDueDate: "2024-02-15"
+                    totalAmount: 10440.00
+                  - id: 2
+                    issueDate: "2024-01-20"
+                    paymentDueDate: "2024-02-20"
+                    totalAmount: 20880.00
+                pagination:
+                  page_number: 1
+                  page_size: 20
+                  total: 45
+                  total_pages: 3
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+              examples:
+                invalidDateFormatFrom:
+                  summary: 開始日の日付形式エラー
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentDueFrom:
+                        - "日付の形式が正しくありません"
+                invalidDateFormatTo:
+                  summary: 終了日の日付形式エラー
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentDueTo:
+                        - "日付の形式が正しくありません"
+                invalidPageNumber:
+                  summary: ページ番号が0以下の場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      page_number:
+                        - "ページ番号は1以上にしてください"
+                invalidPageSizeMin:
+                  summary: ページサイズが0以下の場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      page_size:
+                        - "ページサイズは1以上にしてください"
+                invalidPageSizeMax:
+                  summary: ページサイズが100を超える場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      page_size:
+                        - "ページサイズは100以下にしてください"
+                invalidDateRange:
+                  summary: 日付範囲の論理エラー
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentDueTo:
+                        - "支払期日の終了日は開始日より後の日付にしてください"
+                multipleErrors:
+                  summary: 複数フィールドで同時にエラーが発生する場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentDueFrom:
+                        - "日付の形式が正しくありません"
+                      paymentDueTo:
+                        - "日付の形式が正しくありません"
+                      page_number:
+                        - "ページ番号は1以上にしてください"
+                      page_size:
+                        - "ページサイズは100以下にしてください"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedErrorResponse"
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterUserRequest:
+      type: object
+      required:
+        - companyName
+        - name
+        - email
+        - password
+      properties:
+        companyName:
+          type: string
+          description: 企業名
+          maxLength: 255
+          example: "株式会社サンプル"
+        name:
+          type: string
+          description: 氏名
+          maxLength: 255
+          example: "山田太郎"
+        email:
+          type: string
+          format: email
+          description: メールアドレス（RFC 5321準拠、最大254文字）
+          maxLength: 254
+          example: "yamada@example.com"
+        password:
+          type: string
+          format: password
+          description: パスワード
+          example: "Password123!"
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "yamada@example.com"
+        password:
+          type: string
+          format: password
+          example: "Password123!"
+    LoginResponse:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjF9.example"
+    ValidationErrorResponse:
+      # バリデーションエラーレスポンス
+      # プロパティ毎のエラー詳細を返すため、detailsオブジェクトを使用
+      # フィールド名をキー、エラーメッセージの配列を値とする形式
+      # 同一フィールドで複数のエラーが発生する場合、メッセージは配列形式で返す
+      type: object
+      required:
+        - code
+        - details
+      properties:
+        code:
+          type: string
+          description: エラーコード
+          example: "VALIDATION_ERROR"
+        details:
+          type: object
+          description: フィールド名をキー、エラーメッセージの配列を値とするオブジェクト
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email:
+              - "入力してください"
+              - "メールアドレスの形式が正しくありません"
+            paymentAmount:
+              - "0.01以上にしてください"
+    UnauthorizedErrorResponse:
+      # 認証エラーレスポンス
+      # セキュリティ上の理由により、詳細情報は返さず、codeとmessageのみを返す
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: エラーコード
+          example: "UNAUTHORIZED"
+        message:
+          type: string
+          description: エラーメッセージ
+          example: "認証に失敗しました"
+    ConflictErrorResponse:
+      # コンフリクトエラーレスポンス
+      # emailが既に存在する場合など、リソースの競合を表す
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: エラーコード
+          example: "CONFLICT"
+        message:
+          type: string
+          description: エラーメッセージ
+          example: "メールアドレスは既に登録されています"
+    CreateInvoiceRequest:
+      # 請求書登録リクエスト
+      type: object
+      required:
+        - issueDate
+        - paymentAmount
+        - paymentDueDate
+      properties:
+        issueDate:
+          type: string
+          format: date
+          description: 発行日（過去または今日のみ許可）
+          example: "2024-01-15"
+        paymentAmount:
+          type: number
+          format: decimal
+          description: 支払金額（正の値のみ許可）
+          minimum: 0.01
+          example: 10000.00
+        paymentDueDate:
+          type: string
+          format: date
+          description: 支払期日（未来の日付のみ許可）
+          example: "2024-02-15"
+    CreateInvoiceResponse:
+      # 請求書登録レスポンス
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          description: 請求書ID
+          example: 1
+    InvoiceListResponse:
+      # 請求書一覧取得レスポンス
+      # プロトタイプ＋一覧なので、詳細情報はノイズ。期限と金額だけわかればいい。
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          description: 請求書一覧
+          items:
+            $ref: "#/components/schemas/InvoiceListItem"
+        pagination:
+          $ref: "#/components/schemas/PaginationInfo"
+    InvoiceListItem:
+      # 請求書一覧項目
+      # プロトタイプ段階では、期限と金額、発行日を返す
+      type: object
+      required:
+        - id
+        - issueDate
+        - paymentDueDate
+        - totalAmount
+      properties:
+        id:
+          type: integer
+          description: 請求書ID
+          example: 1
+        issueDate:
+          type: string
+          format: date
+          description: 発行日
+          example: "2024-01-15"
+        paymentDueDate:
+          type: string
+          format: date
+          description: 支払期日
+          example: "2024-02-15"
+        totalAmount:
+          type: number
+          format: decimal
+          description: 請求金額
+          example: 10440.00
+    PaginationInfo:
+      # ページネーション情報
+      type: object
+      required:
+        - page_number
+        - page_size
+        - total
+        - total_pages
+      properties:
+        page_number:
+          type: integer
+          description: 現在のページ番号
+          example: 1
+        page_size:
+          type: integer
+          description: 1ページあたりの件数
+          example: 20
+        total:
+          type: integer
+          description: 総件数
+          example: 45
+        total_pages:
+          type: integer
+          description: 総ページ数
+          example: 3

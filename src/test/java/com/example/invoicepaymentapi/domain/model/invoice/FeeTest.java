@@ -136,18 +136,16 @@ class FeeTest {
         }
 
         @Test
-        @DisplayName("小数部が4桁以上の場合にvalidateメソッドがエラーを返す")
-        void shouldReturnErrorWhenValidatingWithMoreThanThreeDecimalPlaces() {
+        @DisplayName("小数部が4桁以上でも丸め込まれて有効な値になる場合はエラーを返さない")
+        void shouldNotReturnErrorWhenValidatingWithMoreThanThreeDecimalPlaces() {
             // Given
-            BigDecimal value = new BigDecimal("400.9999"); // 4桁
+            BigDecimal value = new BigDecimal("400.9999"); // 4桁だが、丸め込むと401.00になる
 
             // When
             List<ValidationError> errors = Fee.validate(value);
 
             // Then
-            assertFalse(errors.isEmpty());
-            assertEquals("fee", errors.get(0).field());
-            assertEquals("validation.fee.scale", errors.get(0).messageKey());
+            assertTrue(errors.isEmpty());
         }
 
         @Test

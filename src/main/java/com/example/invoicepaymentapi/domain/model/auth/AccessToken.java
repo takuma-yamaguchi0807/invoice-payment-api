@@ -3,12 +3,9 @@ package com.example.invoicepaymentapi.domain.model.auth;
 import com.example.invoicepaymentapi.domain.exception.UnauthorizedException;
 import com.example.invoicepaymentapi.domain.model.user.UserId;
 import org.apache.commons.lang3.StringUtils;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,7 +104,8 @@ public record AccessToken(String value) {
      */
     public static void validate(String token) {
         if (StringUtils.isEmpty(token)) {
-            throw new UnauthorizedException("error.authentication.token.required");
+            log.warn("Authentication failed: Access token is required");
+            throw new UnauthorizedException("error.authentication.failed");
         }
 
         try {
@@ -115,18 +113,12 @@ public record AccessToken(String value) {
         } catch (IllegalStateException e) {
             // JWT_SECRET未設定の場合はそのまま再スロー（システム設定エラー）
             throw e;
-        } catch (ExpiredJwtException e) {
-            log.debug("JWT token expired: {}", e.getMessage());
-            throw new UnauthorizedException("error.authentication.token.expired");
-        } catch (SignatureException | MalformedJwtException e) {
-            log.debug("JWT token validation failed: {}", e.getMessage());
-            throw new UnauthorizedException("error.authentication.token.invalid");
         } catch (JwtException e) {
-            log.debug("JWT token validation failed: {}", e.getMessage());
-            throw new UnauthorizedException("error.authentication.token.invalid");
+            log.warn("Authentication failed: JWT token validation failed. reason={}, token={}", e.getMessage(), token);
+            throw new UnauthorizedException("error.authentication.failed");
         } catch (Exception e) {
-            log.debug("Unexpected error during JWT validation: {}", e.getMessage());
-            throw new UnauthorizedException("error.authentication.token.invalid");
+            log.warn("Authentication failed: Unexpected error during JWT validation. reason={}, token={}", e.getMessage(), token);
+            throw new UnauthorizedException("error.authentication.failed");
         }
     }
 
@@ -149,18 +141,12 @@ public record AccessToken(String value) {
         } catch (IllegalStateException e) {
             // JWT_SECRET未設定またはUserId未存在の場合はそのまま再スロー
             throw e;
-        } catch (ExpiredJwtException e) {
-            log.debug("JWT token expired: {}", e.getMessage());
-            throw new UnauthorizedException("error.authentication.token.expired");
-        } catch (SignatureException | MalformedJwtException e) {
-            log.debug("JWT token validation failed: {}", e.getMessage());
-            throw new UnauthorizedException("error.authentication.token.invalid");
         } catch (JwtException e) {
-            log.debug("JWT token validation failed: {}", e.getMessage());
-            throw new UnauthorizedException("error.authentication.token.invalid");
+            log.warn("Authentication failed: JWT token validation failed. reason={}, token={}", e.getMessage(), this.value);
+            throw new UnauthorizedException("error.authentication.failed");
         } catch (Exception e) {
-            log.error("Unexpected error during JWT parsing: {}", e.getMessage());
-            throw new UnauthorizedException("error.authentication.token.invalid");
+            log.warn("Authentication failed: Unexpected error during JWT parsing. reason={}, token={}", e.getMessage(), this.value);
+            throw new UnauthorizedException("error.authentication.failed");
         }
     }
 

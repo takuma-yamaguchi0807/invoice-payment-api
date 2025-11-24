@@ -48,7 +48,7 @@ public record TotalAmount(BigDecimal value) {
     /**
      * バリデーションを実行し、エラーのリストを返す
      * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
-     * 丸め込み可能な値（小数部3桁以下）は許容し、丸め込み後の値で有効範囲をチェックする
+     * 丸め込み後の値で有効範囲をチェックする
      *
      * @param value 請求金額
      * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
@@ -58,27 +58,22 @@ public record TotalAmount(BigDecimal value) {
 
         if (value == null) {
             errors.add(ValidationError.required("totalAmount"));
-        } else {
-            // 負の値チェック（丸め込み前の値でチェック）
-            if (value.compareTo(BigDecimal.ZERO) < 0) {
-                errors.add(new ValidationError("totalAmount", "validation.totalAmount.negative"));
-            }
+            return errors;
+        }
 
-            // 丸め込み後の値を計算
-            BigDecimal rounded = value.setScale(SCALE, RoundingMode.HALF_UP);
+        // 負の値チェック（丸め込み前の値でチェック）
+        if (value.compareTo(BigDecimal.ZERO) < 0) {
+            errors.add(new ValidationError("totalAmount", "validation.negative"));
+            return errors; // 負の値の場合は、整数部チェックは不要
+        }
 
-            // 精度チェック（小数部が3桁以下であることを確認）
-            // 丸め込み可能な範囲内（3桁以下）なら許容
-            int scale = value.scale();
-            if (scale > 3) {
-                errors.add(new ValidationError("totalAmount", "validation.totalAmount.scale"));
-            }
+        // 丸め込み後の値を計算
+        BigDecimal rounded = value.setScale(SCALE, RoundingMode.HALF_UP);
 
-            // 整数部の桁数チェック（丸め込み後の値でチェック、15桁 - 2桁 = 13桁）
-            BigDecimal integerPart = rounded.setScale(0, RoundingMode.DOWN);
-            if (integerPart.precision() > 13) {
-                errors.add(new ValidationError("totalAmount", "validation.totalAmount.scale"));
-            }
+        // 整数部の桁数チェック（丸め込み後の値でチェック、15桁 - 2桁 = 13桁）
+        BigDecimal integerPart = rounded.setScale(0, RoundingMode.DOWN);
+        if (integerPart.precision() > 13) {
+            errors.add(new ValidationError("totalAmount", "validation.maxIntegerDigits"));
         }
 
         return errors;

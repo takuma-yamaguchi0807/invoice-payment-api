@@ -32,7 +32,7 @@ public record PaymentAmount(BigDecimal value) {
     /**
      * バリデーションを実行し、エラーのリストを返す
      * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
-     * 丸め込み可能な値（小数部3桁以下）は許容し、丸め込み前の値で0.01未満チェック、丸め込み後の値で有効範囲をチェックする
+     * リクエスト値（丸め込み前）で最小値チェック、丸め込み後の値で整数部の桁数チェックを行う
      *
      * @param value 支払金額
      * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
@@ -42,27 +42,24 @@ public record PaymentAmount(BigDecimal value) {
 
         if (value == null) {
             errors.add(ValidationError.required("paymentAmount"));
-        } else {
-            // 0.01未満のチェック（丸め込み前の値でチェック）
-            if (value.compareTo(new BigDecimal("0.01")) < 0) {
-                errors.add(new ValidationError("paymentAmount", "validation.paymentAmount.min"));
-            }
+            return errors;
+        }
 
-            // 丸め込み後の値を計算
-            BigDecimal rounded = value.setScale(SCALE, RoundingMode.HALF_UP);
+        // 0.01未満のチェック（丸め込み前の値でチェック）
+        // リクエスト値として受け取る値そのもので検証する
+        if (value.compareTo(new BigDecimal("0.01")) < 0) {
+            errors.add(new ValidationError("paymentAmount", "validation.paymentAmount.min"));
+            return errors; // 最小値未満の場合は、整数部チェックは不要
+        }
 
-            // 精度チェック（小数部が3桁以下であることを確認）
-            // 丸め込み可能な範囲内（3桁以下）なら許容
-            int scale = value.scale();
-            if (scale > 3) {
-                errors.add(new ValidationError("paymentAmount", "validation.paymentAmount.scale"));
-            }
+        // 丸め込み後の値を計算
+        BigDecimal rounded = value.setScale(SCALE, RoundingMode.HALF_UP);
 
-            // 整数部の桁数チェック（丸め込み後の値でチェック、15桁 - 2桁 = 13桁）
-            BigDecimal integerPart = rounded.setScale(0, RoundingMode.DOWN);
-            if (integerPart.precision() > 13) {
-                errors.add(new ValidationError("paymentAmount", "validation.paymentAmount.scale"));
-            }
+        // 整数部の桁数チェック（丸め込み後の値でチェック、15桁 - 2桁 = 13桁）
+        // 実際に保存される値の制約を確認する
+        BigDecimal integerPart = rounded.setScale(0, RoundingMode.DOWN);
+        if (integerPart.precision() > 13) {
+            errors.add(new ValidationError("paymentAmount", "validation.maxIntegerDigits"));
         }
 
         return errors;

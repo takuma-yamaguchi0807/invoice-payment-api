@@ -23,7 +23,6 @@ import java.util.Locale;
 @Component
 public class SecurityExceptionHandler implements AuthenticationEntryPoint {
     private static final Logger log = LoggerFactory.getLogger(SecurityExceptionHandler.class);
-    private static final String AUTHENTICATION_REQUIRED_MESSAGE_KEY = "error.authentication.required";
     
     private final MessageSource messageSource;
     private final LocaleResolver localeResolver;
@@ -48,10 +47,22 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint {
 
         // ロケールを取得（Accept-Languageヘッダーから）
         Locale locale = localeResolver.resolveLocale(request);
+        
+        // 全ての認証エラーは「認証に失敗しました」に統一
+        String messageKey = "error.authentication.failed";
+        
+        // causeをログに出力（詳細情報）
+        Throwable cause = authException.getCause();
+        if (cause != null) {
+            log.warn("Authentication failed: cause={}, message={}", cause.getClass().getName(), cause.getMessage());
+        } else {
+            log.warn("Authentication failed: message={}", authException.getMessage());
+        }
+        
         String message = messageSource.getMessage(
-                AUTHENTICATION_REQUIRED_MESSAGE_KEY,
+                messageKey,
                 null,
-                "認証が必要です", // デフォルトメッセージ（日本語）
+                messageKey, // メッセージが見つからない場合はキーをそのまま返す
                 locale
         );
 

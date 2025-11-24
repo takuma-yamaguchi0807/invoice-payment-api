@@ -184,28 +184,28 @@ paths:
                     code: "VALIDATION_ERROR"
                     details:
                       issueDate:
-                        - "発行日は過去または今日の日付にしてください"
+                        - "過去または今日の日付にしてください"
                 invalidDueDate:
                   summary: 支払期日が過去または今日の場合
                   value:
                     code: "VALIDATION_ERROR"
                     details:
                       paymentDueDate:
-                        - "支払期日は未来の日付にしてください"
+                        - "未来の日付にしてください"
                 invalidAmount:
-                  summary: 支払金額が0以下の場合
+                  summary: 支払金額が0.01未満の場合
                   value:
                     code: "VALIDATION_ERROR"
                     details:
                       paymentAmount:
-                        - "支払金額は0より大きい値にしてください"
-                invalidAmountPrecision:
-                  summary: 支払金額の精度エラー（小数部が2桁を超える、または整数部が13桁を超える）
+                        - "0.01以上にしてください"
+                invalidAmountMaxIntegerDigits:
+                  summary: 支払金額の整数部が13桁を超える場合
                   value:
                     code: "VALIDATION_ERROR"
                     details:
                       paymentAmount:
-                        - "支払金額の精度が正しくありません"
+                        - "整数部が13桁を超えています"
                 invalidDateFormat:
                   summary: 日付形式エラー
                   value:
@@ -220,9 +220,9 @@ paths:
                     details:
                       paymentAmount:
                         - "入力してください"
-                        - "支払金額は0より大きい値にしてください"
+                        - "0.01以上にしてください"
                       issueDate:
-                        - "発行日は過去または今日の日付にしてください"
+                        - "過去または今日の日付にしてください"
         "401":
           description: Unauthorized
           content:
@@ -409,7 +409,7 @@ components:
               - "入力してください"
               - "メールアドレスの形式が正しくありません"
             paymentAmount:
-              - "支払金額は0より大きい値である必要があります"
+              - "0.01以上にしてください"
     UnauthorizedErrorResponse:
       # 認証エラーレスポンス
       # セキュリティ上の理由により、詳細情報は返さず、codeとmessageのみを返す

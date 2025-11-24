@@ -45,7 +45,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (UnauthorizedException e) {
             // UnauthorizedExceptionをAuthenticationExceptionに変換してSecurityExceptionHandlerに処理を委譲
-            throw new AuthenticationCredentialsNotFoundException(e.getMessage(), e);
+            // メッセージキーをメッセージとして渡し、UnauthorizedExceptionをcauseとして設定
+            throw new AuthenticationCredentialsNotFoundException(e.getMessageKey(), e);
         } catch (AuthenticationException e) {
             // AuthenticationExceptionは再スローしてSecurityExceptionHandlerに処理を委譲
             // フィルターチェーンは中断されるため、filterChain.doFilterは呼ばない
@@ -78,36 +79,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * tokenがnullの場合は何もせずnullを返す（SecurityConfigのpermitAll()に委譲）
      *
      * @param token JWTトークン
-     * @return 認証情報（tokenがnullまたは検証失敗時はnull）
+     * @return 認証情報（tokenがnullの場合はnull）
+     * @throws UnauthorizedException JWT検証に失敗した場合
      */
-    private Authentication authenticate(String token) {
+    private Authentication authenticate(String token) throws UnauthorizedException {
         // tokenがnullの場合は何もせずnullを返す
         // SecurityConfigのpermitAll()で公開エンドポイントは許可される
         if (token == null) {
             return null;
         }
 
-        try {
-            // JWTトークンを検証
-            AccessToken.validate(token);
-            
-            // 検証成功後、AccessToken値オブジェクトを作成
-            AccessToken accessToken = new AccessToken(token);
-            UserId userId = accessToken.extractUserId();
+        // JWTトークンを検証
+        AccessToken.validate(token);
+        
+        // 検証成功後、AccessToken値オブジェクトを作成
+        AccessToken accessToken = new AccessToken(token);
+        UserId userId = accessToken.extractUserId();
 
-            // 認証情報を作成（権限は現時点では不要）
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userId.value(),
-                            null,
-                            Collections.emptyList()
-                    );
+        // 認証情報を作成（権限は現時点では不要）
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        userId.value(),
+                        null,
+                        Collections.emptyList()
+                );
 
-            return authentication;
-        } catch (Exception e) {
-            log.debug("JWT token validation failed: {}", e.getMessage());
-            return null;
-        }
+        return authentication;
+        // UnauthorizedExceptionは再スローしてdoFilterInternal()で処理
     }
 }
 

@@ -2,6 +2,7 @@ package com.example.invoicepaymentapi.domain.model.invoice;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -41,14 +42,14 @@ public record PaymentAmount(BigDecimal value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (value == null) {
-            errors.add(ValidationError.required("paymentAmount"));
+            errors.add(ValidationError.required(ApiPropertyNames.PAYMENT_AMOUNT));
             return errors;
         }
 
         // 0.01未満のチェック（丸め込み前の値でチェック）
         // リクエスト値として受け取る値そのもので検証する
         if (value.compareTo(new BigDecimal("0.01")) < 0) {
-            errors.add(new ValidationError("paymentAmount", "validation.paymentAmount.min"));
+            errors.add(new ValidationError(ApiPropertyNames.PAYMENT_AMOUNT, "validation.paymentAmount.min"));
             return errors; // 最小値未満の場合は、整数部チェックは不要
         }
 
@@ -59,7 +60,7 @@ public record PaymentAmount(BigDecimal value) {
         // 実際に保存される値の制約を確認する
         BigDecimal integerPart = rounded.setScale(0, RoundingMode.DOWN);
         if (integerPart.precision() > 13) {
-            errors.add(new ValidationError("paymentAmount", "validation.maxIntegerDigits"));
+            errors.add(new ValidationError(ApiPropertyNames.PAYMENT_AMOUNT, "validation.maxIntegerDigits"));
         }
 
         return errors;

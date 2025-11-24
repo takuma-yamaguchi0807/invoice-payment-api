@@ -4,6 +4,7 @@ import com.example.invoicepaymentapi.application.usecase.invoices.CreateInvoiceU
 import com.example.invoicepaymentapi.application.usecase.invoices.ListInvoicesUseCase;
 import com.example.invoicepaymentapi.application.usecase.invoices.dto.CreateInvoiceResponseDto;
 import com.example.invoicepaymentapi.application.usecase.invoices.dto.InvoiceListResponseDto;
+import com.example.invoicepaymentapi.domain.model.user.UserId;
 import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,8 +33,8 @@ public class InvoiceController {
     public ResponseEntity<CreateInvoiceResponse> createInvoice(
             @RequestBody CreateInvoiceRequest request
     ) {
-        Integer userId = extractUserId();
-        CreateInvoiceResponseDto responseDto = createInvoiceUseCase.execute(userId, request.toDto());
+        UserId userId = extractUserId();
+        CreateInvoiceResponseDto responseDto = createInvoiceUseCase.execute(userId.value(), request.toDto());
         CreateInvoiceResponse response = CreateInvoiceResponse.from(responseDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -54,7 +55,7 @@ public class InvoiceController {
             @RequestParam(name = ApiPropertyNames.PAGE_NUMBER, required = false) Integer pageNumber,
             @RequestParam(name = ApiPropertyNames.PAGE_SIZE, required = false) Integer pageSize
     ) {
-        Integer userId = extractUserId();
+        UserId userId = extractUserId();
         InvoiceListResponseDto responseDto = listInvoicesUseCase.execute(
                 userId,
                 paymentDueFrom,
@@ -69,14 +70,16 @@ public class InvoiceController {
     /**
      * SecurityContextから認証情報を取得し、ユーザーIDを抽出
      *
-     * @return ユーザーID
+     * @return ユーザーIDの値オブジェクト
      */
-    private Integer extractUserId() {
+    private UserId extractUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal() == null) {
             throw new IllegalStateException("Authentication is required");
         }
-        return (Integer) authentication.getPrincipal();
+        Integer userIdValue = (Integer) authentication.getPrincipal();
+        // JWTのuserIdがおかしい場合はそもそもおかしいので、reconstructを使用（バリデーションなし）
+        return UserId.reconstruct(userIdValue);
     }
 }
 

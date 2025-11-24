@@ -59,6 +59,96 @@ class PaymentDueDateTest {
             assertNotNull(paymentDueDate);
             assertEquals(date, paymentDueDate.value());
         }
+
+        @Test
+        @DisplayName("defaultValueメソッドでデフォルト値（明日）を作成できる")
+        void shouldCreateDefaultValue() {
+            // When
+            PaymentDueDate paymentDueDate = PaymentDueDate.defaultValue();
+
+            // Then
+            assertNotNull(paymentDueDate);
+            assertEquals(LocalDate.now().plusDays(1), paymentDueDate.value());
+        }
+
+        @Test
+        @DisplayName("ofCreateOrDefaultFromメソッドでnullの場合はデフォルト値が使われる")
+        void shouldUseDefaultValueWhenOfCreateOrDefaultFromIsNull() {
+            // When
+            PaymentDueDate paymentDueDate = PaymentDueDate.ofCreateOrDefaultFrom(null);
+
+            // Then
+            assertNotNull(paymentDueDate);
+            assertEquals(LocalDate.now().plusDays(1), paymentDueDate.value());
+        }
+
+        @Test
+        @DisplayName("ofCreateOrDefaultFromメソッドで空文字列の場合はデフォルト値が使われる")
+        void shouldUseDefaultValueWhenOfCreateOrDefaultFromIsEmpty() {
+            // When
+            PaymentDueDate paymentDueDate = PaymentDueDate.ofCreateOrDefaultFrom("");
+
+            // Then
+            assertNotNull(paymentDueDate);
+            assertEquals(LocalDate.now().plusDays(1), paymentDueDate.value());
+        }
+
+        @Test
+        @DisplayName("ofCreateOrDefaultFromメソッドで有効な値の場合はその値が使われる")
+        void shouldUseProvidedValueWhenOfCreateOrDefaultFromIsValid() {
+            // Given
+            String dateString = LocalDate.now().plusDays(30).toString();
+
+            // When
+            PaymentDueDate paymentDueDate = PaymentDueDate.ofCreateOrDefaultFrom(dateString);
+
+            // Then
+            assertNotNull(paymentDueDate);
+            assertEquals(LocalDate.parse(dateString), paymentDueDate.value());
+        }
+
+        @Test
+        @DisplayName("ofCreateOrDefaultToメソッドでnullの場合は開始日から1ヶ月後が使われる")
+        void shouldUseDefaultValueWhenOfCreateOrDefaultToIsNull() {
+            // Given
+            PaymentDueDate from = PaymentDueDate.create(LocalDate.now().plusDays(10).toString());
+
+            // When
+            PaymentDueDate paymentDueDate = PaymentDueDate.ofCreateOrDefaultTo(null, from);
+
+            // Then
+            assertNotNull(paymentDueDate);
+            assertEquals(from.value().plusMonths(1), paymentDueDate.value());
+        }
+
+        @Test
+        @DisplayName("ofCreateOrDefaultToメソッドで空文字列の場合は開始日から1ヶ月後が使われる")
+        void shouldUseDefaultValueWhenOfCreateOrDefaultToIsEmpty() {
+            // Given
+            PaymentDueDate from = PaymentDueDate.create(LocalDate.now().plusDays(10).toString());
+
+            // When
+            PaymentDueDate paymentDueDate = PaymentDueDate.ofCreateOrDefaultTo("", from);
+
+            // Then
+            assertNotNull(paymentDueDate);
+            assertEquals(from.value().plusMonths(1), paymentDueDate.value());
+        }
+
+        @Test
+        @DisplayName("ofCreateOrDefaultToメソッドで有効な値の場合はその値が使われる")
+        void shouldUseProvidedValueWhenOfCreateOrDefaultToIsValid() {
+            // Given
+            PaymentDueDate from = PaymentDueDate.create(LocalDate.now().plusDays(10).toString());
+            String dateString = LocalDate.now().plusDays(40).toString();
+
+            // When
+            PaymentDueDate paymentDueDate = PaymentDueDate.ofCreateOrDefaultTo(dateString, from);
+
+            // Then
+            assertNotNull(paymentDueDate);
+            assertEquals(LocalDate.parse(dateString), paymentDueDate.value());
+        }
     }
 
     @Nested

@@ -7,6 +7,7 @@ import com.example.invoicepaymentapi.infrastructure.entity.UserEntity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
+import com.example.invoicepaymentapi.domain.model.user.UserId;
 
 import java.util.Optional;
 
@@ -43,6 +44,15 @@ public class UserRepositoryImpl implements UserRepository {
         return query.getResultStream()
                 .findFirst()
                 .map(this::toDomain);
+    }
+
+    @Override
+    public Optional<User> findById(UserId userId) {
+        UserEntity entity = entityManager.find(UserEntity.class, userId.value());
+        if (entity == null) {
+            return Optional.empty();
+        }
+        return Optional.of(toDomain(entity));
     }
 
     /**

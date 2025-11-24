@@ -39,6 +39,12 @@ public final class ApiPropertyNames {
     public static final String TOTAL = "total";
     public static final String TOTAL_PAGES = "total_pages";
 
+    // その他のフィールド名（内部バリデーション用）
+    public static final String USER_ID = "userId";
+    public static final String INVOICE_ID = "invoiceId";
+    public static final String FEE = "fee";
+    public static final String TAX_AMOUNT = "taxAmount";
+
     // エラーレスポンス共通
     public static final String CODE = "code";
     public static final String MESSAGE = "message";

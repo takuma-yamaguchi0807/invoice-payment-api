@@ -2,6 +2,7 @@ package com.example.invoicepaymentapi.domain.model.user;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -36,10 +37,10 @@ public record CompanyName(String value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (StringUtils.isEmpty(value)) {
-            errors.add(ValidationError.required("companyName"));
+            errors.add(ValidationError.required(ApiPropertyNames.COMPANY_NAME));
         } else {
             if (value.length() > MAX_LENGTH) {
-                errors.add(new ValidationError("companyName", "validation.maxLength", new Object[]{MAX_LENGTH}));
+                errors.add(new ValidationError(ApiPropertyNames.COMPANY_NAME, "validation.maxLength", new Object[]{MAX_LENGTH}));
             }
         }
 

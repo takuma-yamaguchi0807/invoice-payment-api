@@ -23,9 +23,11 @@ class PaymentDueDateRangeTest {
             // Given
             String fromString = LocalDate.now().plusDays(10).toString();
             String toString = LocalDate.now().plusDays(40).toString();
+            PaymentDueDate from = PaymentDueDate.create(fromString);
+            PaymentDueDate to = PaymentDueDate.create(toString);
 
             // When
-            PaymentDueDateRange range = PaymentDueDateRange.create(fromString, toString);
+            PaymentDueDateRange range = PaymentDueDateRange.create(from, to);
 
             // Then
             assertNotNull(range);
@@ -38,9 +40,11 @@ class PaymentDueDateRangeTest {
         void shouldUseDefaultFromWhenFromIsNull() {
             // Given
             String toString = LocalDate.now().plusDays(40).toString();
+            PaymentDueDate from = PaymentDueDate.ofCreateOrDefaultFrom(null);
+            PaymentDueDate to = PaymentDueDate.create(toString);
 
             // When
-            PaymentDueDateRange range = PaymentDueDateRange.create(null, toString);
+            PaymentDueDateRange range = PaymentDueDateRange.create(from, to);
 
             // Then
             assertNotNull(range);
@@ -53,9 +57,11 @@ class PaymentDueDateRangeTest {
         void shouldUseDefaultFromWhenFromIsEmpty() {
             // Given
             String toString = LocalDate.now().plusDays(40).toString();
+            PaymentDueDate from = PaymentDueDate.ofCreateOrDefaultFrom("");
+            PaymentDueDate to = PaymentDueDate.create(toString);
 
             // When
-            PaymentDueDateRange range = PaymentDueDateRange.create("", toString);
+            PaymentDueDateRange range = PaymentDueDateRange.create(from, to);
 
             // Then
             assertNotNull(range);
@@ -69,9 +75,11 @@ class PaymentDueDateRangeTest {
             // Given
             LocalDate fromDate = LocalDate.now().plusDays(10);
             String fromString = fromDate.toString();
+            PaymentDueDate from = PaymentDueDate.create(fromString);
+            PaymentDueDate to = PaymentDueDate.ofCreateOrDefaultTo(null, from);
 
             // When
-            PaymentDueDateRange range = PaymentDueDateRange.create(fromString, null);
+            PaymentDueDateRange range = PaymentDueDateRange.create(from, to);
 
             // Then
             assertNotNull(range);
@@ -85,9 +93,11 @@ class PaymentDueDateRangeTest {
             // Given
             LocalDate fromDate = LocalDate.now().plusDays(10);
             String fromString = fromDate.toString();
+            PaymentDueDate from = PaymentDueDate.create(fromString);
+            PaymentDueDate to = PaymentDueDate.ofCreateOrDefaultTo("", from);
 
             // When
-            PaymentDueDateRange range = PaymentDueDateRange.create(fromString, "");
+            PaymentDueDateRange range = PaymentDueDateRange.create(from, to);
 
             // Then
             assertNotNull(range);
@@ -99,7 +109,9 @@ class PaymentDueDateRangeTest {
         @DisplayName("両方nullの場合、デフォルト値が使われる")
         void shouldUseDefaultValuesWhenBothAreNull() {
             // When
-            PaymentDueDateRange range = PaymentDueDateRange.create(null, null);
+            PaymentDueDate from = PaymentDueDate.ofCreateOrDefaultFrom(null);
+            PaymentDueDate to = PaymentDueDate.ofCreateOrDefaultTo(null, from);
+            PaymentDueDateRange range = PaymentDueDateRange.create(from, to);
 
             // Then
             assertNotNull(range);
@@ -113,9 +125,10 @@ class PaymentDueDateRangeTest {
         void shouldCreatePaymentDueDateRangeWhenFromEqualsTo() {
             // Given
             String dateString = LocalDate.now().plusDays(10).toString();
+            PaymentDueDate date = PaymentDueDate.create(dateString);
 
             // When
-            PaymentDueDateRange range = PaymentDueDateRange.create(dateString, dateString);
+            PaymentDueDateRange range = PaymentDueDateRange.create(date, date);
 
             // Then
             assertNotNull(range);
@@ -137,10 +150,14 @@ class PaymentDueDateRangeTest {
             // When & Then
             DomainValidationException exception = assertThrows(
                     DomainValidationException.class,
-                    () -> PaymentDueDateRange.create(invalidFrom, validTo)
+                    () -> {
+                        PaymentDueDate from = PaymentDueDate.create(invalidFrom);
+                        PaymentDueDate to = PaymentDueDate.create(validTo);
+                        PaymentDueDateRange.create(from, to);
+                    }
             );
             assertFalse(exception.getErrors().isEmpty());
-            assertEquals("paymentDueFrom", exception.getErrors().get(0).field());
+            assertEquals("paymentDueDate", exception.getErrors().get(0).field());
             assertEquals("validation.date.format", exception.getErrors().get(0).messageKey());
         }
 
@@ -154,10 +171,14 @@ class PaymentDueDateRangeTest {
             // When & Then
             DomainValidationException exception = assertThrows(
                     DomainValidationException.class,
-                    () -> PaymentDueDateRange.create(today, validTo)
+                    () -> {
+                        PaymentDueDate from = PaymentDueDate.create(today);
+                        PaymentDueDate to = PaymentDueDate.create(validTo);
+                        PaymentDueDateRange.create(from, to);
+                    }
             );
             assertFalse(exception.getErrors().isEmpty());
-            assertEquals("paymentDueFrom", exception.getErrors().get(0).field());
+            assertEquals("paymentDueDate", exception.getErrors().get(0).field());
             assertEquals("validation.paymentDueDate.notFuture", exception.getErrors().get(0).messageKey());
         }
 
@@ -171,10 +192,14 @@ class PaymentDueDateRangeTest {
             // When & Then
             DomainValidationException exception = assertThrows(
                     DomainValidationException.class,
-                    () -> PaymentDueDateRange.create(pastDate, validTo)
+                    () -> {
+                        PaymentDueDate from = PaymentDueDate.create(pastDate);
+                        PaymentDueDate to = PaymentDueDate.create(validTo);
+                        PaymentDueDateRange.create(from, to);
+                    }
             );
             assertFalse(exception.getErrors().isEmpty());
-            assertEquals("paymentDueFrom", exception.getErrors().get(0).field());
+            assertEquals("paymentDueDate", exception.getErrors().get(0).field());
             assertEquals("validation.paymentDueDate.notFuture", exception.getErrors().get(0).messageKey());
         }
     }
@@ -192,10 +217,14 @@ class PaymentDueDateRangeTest {
             // When & Then
             DomainValidationException exception = assertThrows(
                     DomainValidationException.class,
-                    () -> PaymentDueDateRange.create(validFrom, invalidTo)
+                    () -> {
+                        PaymentDueDate from = PaymentDueDate.create(validFrom);
+                        PaymentDueDate to = PaymentDueDate.create(invalidTo);
+                        PaymentDueDateRange.create(from, to);
+                    }
             );
             assertFalse(exception.getErrors().isEmpty());
-            assertEquals("paymentDueTo", exception.getErrors().get(0).field());
+            assertEquals("paymentDueDate", exception.getErrors().get(0).field());
             assertEquals("validation.date.format", exception.getErrors().get(0).messageKey());
         }
 
@@ -209,10 +238,14 @@ class PaymentDueDateRangeTest {
             // When & Then
             DomainValidationException exception = assertThrows(
                     DomainValidationException.class,
-                    () -> PaymentDueDateRange.create(validFrom, today)
+                    () -> {
+                        PaymentDueDate from = PaymentDueDate.create(validFrom);
+                        PaymentDueDate to = PaymentDueDate.create(today);
+                        PaymentDueDateRange.create(from, to);
+                    }
             );
             assertFalse(exception.getErrors().isEmpty());
-            assertEquals("paymentDueTo", exception.getErrors().get(0).field());
+            assertEquals("paymentDueDate", exception.getErrors().get(0).field());
             assertEquals("validation.paymentDueDate.notFuture", exception.getErrors().get(0).messageKey());
         }
 
@@ -226,10 +259,14 @@ class PaymentDueDateRangeTest {
             // When & Then
             DomainValidationException exception = assertThrows(
                     DomainValidationException.class,
-                    () -> PaymentDueDateRange.create(validFrom, pastDate)
+                    () -> {
+                        PaymentDueDate from = PaymentDueDate.create(validFrom);
+                        PaymentDueDate to = PaymentDueDate.create(pastDate);
+                        PaymentDueDateRange.create(from, to);
+                    }
             );
             assertFalse(exception.getErrors().isEmpty());
-            assertEquals("paymentDueTo", exception.getErrors().get(0).field());
+            assertEquals("paymentDueDate", exception.getErrors().get(0).field());
             assertEquals("validation.paymentDueDate.notFuture", exception.getErrors().get(0).messageKey());
         }
     }
@@ -243,11 +280,13 @@ class PaymentDueDateRangeTest {
             // Given
             String fromString = LocalDate.now().plusDays(40).toString();
             String toString = LocalDate.now().plusDays(10).toString();
+            PaymentDueDate from = PaymentDueDate.create(fromString);
+            PaymentDueDate to = PaymentDueDate.create(toString);
 
             // When & Then
             DomainValidationException exception = assertThrows(
                     DomainValidationException.class,
-                    () -> PaymentDueDateRange.create(fromString, toString)
+                    () -> PaymentDueDateRange.create(from, to)
             );
             assertFalse(exception.getErrors().isEmpty());
             assertEquals("paymentDueTo", exception.getErrors().get(0).field());

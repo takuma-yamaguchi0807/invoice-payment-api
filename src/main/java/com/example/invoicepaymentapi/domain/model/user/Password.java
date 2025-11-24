@@ -2,6 +2,7 @@ package com.example.invoicepaymentapi.domain.model.user;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -38,13 +39,13 @@ public record Password(String value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (StringUtils.isEmpty(value)) {
-            errors.add(ValidationError.required("password"));
+            errors.add(ValidationError.required(ApiPropertyNames.PASSWORD));
         } else {
             if (value.length() < MIN_LENGTH) {
-                errors.add(new ValidationError("password", "validation.password.length"));
+                errors.add(new ValidationError(ApiPropertyNames.PASSWORD, "validation.password.length"));
             }
             if (!hasRequiredCharacterTypes(value)) {
-                errors.add(new ValidationError("password", "validation.password.characterTypes"));
+                errors.add(new ValidationError(ApiPropertyNames.PASSWORD, "validation.password.characterTypes"));
             }
         }
 

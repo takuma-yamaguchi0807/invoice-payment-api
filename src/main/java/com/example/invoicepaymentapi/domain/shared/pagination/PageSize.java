@@ -2,6 +2,7 @@ package com.example.invoicepaymentapi.domain.shared.pagination;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,13 +67,13 @@ public record PageSize(Integer value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (value == null) {
-            errors.add(ValidationError.required("page_size"));
+            errors.add(ValidationError.required(ApiPropertyNames.PAGE_SIZE));
         } else {
             if (value < MIN_VALUE) {
-                errors.add(new ValidationError("page_size", "validation.pageSize.min"));
+                errors.add(new ValidationError(ApiPropertyNames.PAGE_SIZE, "validation.pageSize.min"));
             }
             if (value > MAX_VALUE) {
-                errors.add(new ValidationError("page_size", "validation.pageSize.max"));
+                errors.add(new ValidationError(ApiPropertyNames.PAGE_SIZE, "validation.pageSize.max"));
             }
         }
 

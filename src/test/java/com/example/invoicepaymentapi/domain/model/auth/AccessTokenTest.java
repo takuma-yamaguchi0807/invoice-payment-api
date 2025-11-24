@@ -136,7 +136,7 @@ class AccessTokenTest {
                     UnauthorizedException.class,
                     () -> AccessToken.validate(null)
             );
-            assertEquals("JWT token is required", exception.getMessage());
+            assertEquals("error.authentication.failed", exception.getMessageKey());
         }
 
         @Test
@@ -147,7 +147,7 @@ class AccessTokenTest {
                     UnauthorizedException.class,
                     () -> AccessToken.validate("")
             );
-            assertEquals("JWT token is required", exception.getMessage());
+            assertEquals("error.authentication.failed", exception.getMessageKey());
         }
 
         @Test
@@ -165,7 +165,7 @@ class AccessTokenTest {
                     UnauthorizedException.class,
                     () -> AccessToken.validate(invalidToken)
             );
-            assertEquals("Invalid JWT token", exception.getMessage());
+            assertEquals("error.authentication.failed", exception.getMessageKey());
         }
 
         @Test
@@ -195,7 +195,7 @@ class AccessTokenTest {
                     UnauthorizedException.class,
                     () -> AccessToken.validate(tamperedToken)
             );
-            assertEquals("Invalid JWT token", exception.getMessage());
+            assertEquals("error.authentication.failed", exception.getMessageKey());
         }
     }
 
@@ -259,7 +259,7 @@ class AccessTokenTest {
                     UnauthorizedException.class,
                     () -> accessToken.extractUserId()
             );
-            assertEquals("Invalid JWT token", exception.getMessage());
+            assertEquals("error.authentication.failed", exception.getMessageKey());
         }
 
         @Test
@@ -279,7 +279,7 @@ class AccessTokenTest {
                     UnauthorizedException.class,
                     () -> tamperedToken.extractUserId()
             );
-            assertEquals("Invalid JWT token", exception.getMessage());
+            assertEquals("error.authentication.failed", exception.getMessageKey());
         }
     }
 }

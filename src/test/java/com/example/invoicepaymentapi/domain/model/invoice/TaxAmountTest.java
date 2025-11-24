@@ -120,7 +120,7 @@ class TaxAmountTest {
             );
             assertFalse(exception.getErrors().isEmpty());
             assertEquals("taxAmount", exception.getErrors().get(0).field());
-            assertEquals("validation.taxAmount.negative", exception.getErrors().get(0).messageKey());
+            assertEquals("validation.negative", exception.getErrors().get(0).messageKey());
         }
 
         @Test
@@ -160,7 +160,7 @@ class TaxAmountTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("taxAmount", errors.get(0).field());
-            assertEquals("validation.taxAmount.scale", errors.get(0).messageKey());
+            assertEquals("validation.maxIntegerDigits", errors.get(0).messageKey());
         }
 
         @Test
@@ -186,7 +186,7 @@ class TaxAmountTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("taxAmount", errors.get(0).field());
-            assertEquals("validation.taxAmount.negative", errors.get(0).messageKey());
+            assertEquals("validation.negative", errors.get(0).messageKey());
         }
 
         @Test
@@ -201,7 +201,7 @@ class TaxAmountTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("taxAmount", errors.get(0).field());
-            assertEquals("validation.taxAmount.negative", errors.get(0).messageKey());
+            assertEquals("validation.negative", errors.get(0).messageKey());
         }
 
         @Test
@@ -216,7 +216,7 @@ class TaxAmountTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("taxAmount", errors.get(0).field());
-            assertEquals("validation.taxAmount.negative", errors.get(0).messageKey());
+            assertEquals("validation.negative", errors.get(0).messageKey());
         }
 
         @Test

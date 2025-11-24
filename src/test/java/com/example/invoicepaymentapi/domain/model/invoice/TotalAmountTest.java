@@ -121,7 +121,7 @@ class TotalAmountTest {
             );
             assertFalse(exception.getErrors().isEmpty());
             assertEquals("totalAmount", exception.getErrors().get(0).field());
-            assertEquals("validation.totalAmount.negative", exception.getErrors().get(0).messageKey());
+            assertEquals("validation.negative", exception.getErrors().get(0).messageKey());
         }
 
         @Test
@@ -161,7 +161,7 @@ class TotalAmountTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("totalAmount", errors.get(0).field());
-            assertEquals("validation.totalAmount.scale", errors.get(0).messageKey());
+            assertEquals("validation.maxIntegerDigits", errors.get(0).messageKey());
         }
 
         @Test
@@ -187,7 +187,7 @@ class TotalAmountTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("totalAmount", errors.get(0).field());
-            assertEquals("validation.totalAmount.negative", errors.get(0).messageKey());
+            assertEquals("validation.negative", errors.get(0).messageKey());
         }
 
         @Test
@@ -202,7 +202,7 @@ class TotalAmountTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("totalAmount", errors.get(0).field());
-            assertEquals("validation.totalAmount.negative", errors.get(0).messageKey());
+            assertEquals("validation.negative", errors.get(0).messageKey());
         }
 
         @Test
@@ -217,7 +217,7 @@ class TotalAmountTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("totalAmount", errors.get(0).field());
-            assertEquals("validation.totalAmount.negative", errors.get(0).messageKey());
+            assertEquals("validation.negative", errors.get(0).messageKey());
         }
 
         @Test

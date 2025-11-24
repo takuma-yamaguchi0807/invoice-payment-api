@@ -120,7 +120,7 @@ class FeeTest {
             );
             assertFalse(exception.getErrors().isEmpty());
             assertEquals("fee", exception.getErrors().get(0).field());
-            assertEquals("validation.fee.negative", exception.getErrors().get(0).messageKey());
+            assertEquals("validation.negative", exception.getErrors().get(0).messageKey());
         }
 
         @Test
@@ -160,7 +160,7 @@ class FeeTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("fee", errors.get(0).field());
-            assertEquals("validation.fee.scale", errors.get(0).messageKey());
+            assertEquals("validation.maxIntegerDigits", errors.get(0).messageKey());
         }
 
         @Test
@@ -186,7 +186,7 @@ class FeeTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("fee", errors.get(0).field());
-            assertEquals("validation.fee.negative", errors.get(0).messageKey());
+            assertEquals("validation.negative", errors.get(0).messageKey());
         }
 
         @Test
@@ -201,7 +201,7 @@ class FeeTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("fee", errors.get(0).field());
-            assertEquals("validation.fee.negative", errors.get(0).messageKey());
+            assertEquals("validation.negative", errors.get(0).messageKey());
         }
 
         @Test
@@ -216,7 +216,7 @@ class FeeTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("fee", errors.get(0).field());
-            assertEquals("validation.fee.negative", errors.get(0).messageKey());
+            assertEquals("validation.negative", errors.get(0).messageKey());
         }
 
         @Test

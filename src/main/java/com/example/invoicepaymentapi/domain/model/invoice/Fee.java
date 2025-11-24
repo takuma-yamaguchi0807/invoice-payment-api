@@ -2,6 +2,7 @@ package com.example.invoicepaymentapi.domain.model.invoice;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -55,13 +56,13 @@ public record Fee(BigDecimal value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (value == null) {
-            errors.add(ValidationError.required("fee"));
+            errors.add(ValidationError.required(ApiPropertyNames.FEE));
             return errors;
         }
 
         // 負の値チェック（丸め込み前の値でチェック）
         if (value.compareTo(BigDecimal.ZERO) < 0) {
-            errors.add(new ValidationError("fee", "validation.negative"));
+            errors.add(new ValidationError(ApiPropertyNames.FEE, "validation.negative"));
             return errors; // 負の値の場合は、整数部チェックは不要
         }
 
@@ -71,7 +72,7 @@ public record Fee(BigDecimal value) {
         // 整数部の桁数チェック（丸め込み後の値でチェック、15桁 - 2桁 = 13桁）
         BigDecimal integerPart = rounded.setScale(0, RoundingMode.DOWN);
         if (integerPart.precision() > 13) {
-            errors.add(new ValidationError("fee", "validation.maxIntegerDigits"));
+            errors.add(new ValidationError(ApiPropertyNames.FEE, "validation.maxIntegerDigits"));
         }
 
         return errors;

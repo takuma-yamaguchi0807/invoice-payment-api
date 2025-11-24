@@ -2,14 +2,14 @@ package com.example.invoicepaymentapi.domain.model.invoice;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * 支払期日値オブジェクト
@@ -45,7 +45,7 @@ public record PaymentDueDate(LocalDate value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (StringUtils.isEmpty(value)) {
-            errors.add(ValidationError.required("paymentDueDate"));
+            errors.add(ValidationError.required(ApiPropertyNames.PAYMENT_DUE_DATE));
             return errors;
         }
 
@@ -53,39 +53,56 @@ public record PaymentDueDate(LocalDate value) {
         try {
             localDate = LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
         } catch (DateTimeParseException e) {
-            errors.add(new ValidationError("paymentDueDate", "validation.date.format"));
+            errors.add(new ValidationError(ApiPropertyNames.PAYMENT_DUE_DATE, "validation.date.format"));
             return errors;
         }
 
         // 未来の日付でない場合のチェック（未来の日付のみ許可）
         LocalDate today = LocalDate.now();
         if (!localDate.isAfter(today)) {
-            errors.add(new ValidationError("paymentDueDate", "validation.paymentDueDate.notFuture"));
+            errors.add(new ValidationError(ApiPropertyNames.PAYMENT_DUE_DATE, "validation.paymentDueDate.notFuture"));
         }
 
         return errors;
     }
 
     /**
-     * 一覧取得のクエリパラメータ用デフォルト開始日を取得
-     * 要件「未来の支払期日の請求書データ」を考慮し、明日をデフォルトとする
-     * 支払期日は「未来の日付のみ」という制約があるため、今日の請求書は存在しない
+     * デフォルト値で支払期日を作成
      *
-     * @return デフォルト開始日（明日）の値オブジェクト
+     * @return デフォルト値（明日）の支払期日値オブジェクト
      */
-    public static PaymentDueDate defaultFrom() {
+    public static PaymentDueDate defaultValue() {
         return reconstruct(LocalDate.now().plusDays(1));
     }
 
     /**
-     * 一覧取得のクエリパラメータ用デフォルト終了日を取得
-     * 要件「現金の支出を最大一ヶ月遅らせることができる」を考慮し、開始日から1ヶ月後をデフォルトとする
+     * null/空の場合はデフォルト値、それ以外はバリデーションして作成
+     * 一覧取得のクエリパラメータ用（paymentDueFrom）に使用
      *
-     * @param from 開始日の値オブジェクト
-     * @return デフォルト終了日（開始日から1ヶ月後）の値オブジェクト
+     * @param value 支払期日の文字列（null/空の場合は明日をデフォルト）
+     * @return 支払期日値オブジェクト
      */
-    public static PaymentDueDate defaultTo(PaymentDueDate from) {
-        return reconstruct(from.value().plusMonths(1));
+    public static PaymentDueDate ofCreateOrDefaultFrom(String value) {
+        if (StringUtils.isEmpty(value)) {
+            return defaultValue();
+        }
+        return create(value);
+    }
+
+    /**
+     * null/空の場合はデフォルト値、それ以外はバリデーションして作成
+     * 一覧取得のクエリパラメータ用（paymentDueTo）に使用
+     * 開始日から1ヶ月後をデフォルト値とする
+     *
+     * @param value 支払期日の文字列（null/空の場合は開始日から1ヶ月後をデフォルト）
+     * @param from 開始日の値オブジェクト（デフォルト値計算用）
+     * @return 支払期日値オブジェクト
+     */
+    public static PaymentDueDate ofCreateOrDefaultTo(String value, PaymentDueDate from) {
+        if (StringUtils.isEmpty(value)) {
+            return reconstruct(from.value().plusMonths(1));
+        }
+        return create(value);
     }
 
     /**

@@ -2,6 +2,7 @@ package com.example.invoicepaymentapi.domain.model.user;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -74,16 +75,16 @@ public record Email(String value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (StringUtils.isEmpty(value)) {
-            errors.add(ValidationError.required("email"));
+            errors.add(ValidationError.required(ApiPropertyNames.EMAIL));
         } else {
             if (value.length() > MAX_LENGTH) {
-                errors.add(new ValidationError("email", "validation.maxLength", new Object[]{MAX_LENGTH}));
+                errors.add(new ValidationError(ApiPropertyNames.EMAIL, "validation.maxLength", new Object[]{MAX_LENGTH}));
             }
             // 連続するドットをチェック（RFC 5322準拠）
             if (value.contains("..")) {
-                errors.add(new ValidationError("email", "validation.email.format"));
+                errors.add(new ValidationError(ApiPropertyNames.EMAIL, "validation.email.format"));
             } else if (!EMAIL_PATTERN.matcher(value).matches()) {
-                errors.add(new ValidationError("email", "validation.email.format"));
+                errors.add(new ValidationError(ApiPropertyNames.EMAIL, "validation.email.format"));
             }
         }
 

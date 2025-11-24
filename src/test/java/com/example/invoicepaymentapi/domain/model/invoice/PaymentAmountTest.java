@@ -177,7 +177,7 @@ class PaymentAmountTest {
             // Then
             assertFalse(errors.isEmpty());
             assertEquals("paymentAmount", errors.get(0).field());
-            assertEquals("validation.paymentAmount.scale", errors.get(0).messageKey());
+            assertEquals("validation.maxIntegerDigits", errors.get(0).messageKey());
         }
 
         @Test

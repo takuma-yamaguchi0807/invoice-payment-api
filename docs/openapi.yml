@@ -297,12 +297,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/ValidationErrorResponse"
               examples:
-                invalidDateFormat:
-                  summary: 日付形式エラー
+                invalidDateFormatFrom:
+                  summary: 開始日の日付形式エラー
                   value:
                     code: "VALIDATION_ERROR"
                     details:
                       paymentDueFrom:
+                        - "日付の形式が正しくありません"
+                invalidDateFormatTo:
+                  summary: 終了日の日付形式エラー
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentDueTo:
                         - "日付の形式が正しくありません"
                 invalidPageNumber:
                   summary: ページ番号が0以下の場合
@@ -311,6 +318,20 @@ paths:
                     details:
                       page_number:
                         - "ページ番号は1以上にしてください"
+                invalidPageSizeMin:
+                  summary: ページサイズが0以下の場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      page_size:
+                        - "ページサイズは1以上にしてください"
+                invalidPageSizeMax:
+                  summary: ページサイズが100を超える場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      page_size:
+                        - "ページサイズは100以下にしてください"
                 invalidDateRange:
                   summary: 日付範囲の論理エラー
                   value:
@@ -318,6 +339,19 @@ paths:
                     details:
                       paymentDueTo:
                         - "支払期日の終了日は開始日より後の日付にしてください"
+                multipleErrors:
+                  summary: 複数フィールドで同時にエラーが発生する場合
+                  value:
+                    code: "VALIDATION_ERROR"
+                    details:
+                      paymentDueFrom:
+                        - "日付の形式が正しくありません"
+                      paymentDueTo:
+                        - "日付の形式が正しくありません"
+                      page_number:
+                        - "ページ番号は1以上にしてください"
+                      page_size:
+                        - "ページサイズは100以下にしてください"
         "401":
           description: Unauthorized
           content:

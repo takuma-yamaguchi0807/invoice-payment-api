@@ -2,6 +2,8 @@ package com.example.invoicepaymentapi.domain.model.invoice;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -9,70 +11,24 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
 /**
  * 支払期日範囲値オブジェクト
  * 請求書一覧取得時の期間指定を表現する
- * デフォルト値計算、バリデーション、値オブジェクト生成を一括で処理する
+ * 相関チェック（from <= to）のみを担当する
  */
 public record PaymentDueDateRange(PaymentDueDate from, PaymentDueDate to) {
     /**
-     * 文字列から支払期日範囲を作成
-     * デフォルト値計算、バリデーション、値オブジェクト生成を一括で処理する
+     * 支払期日範囲を作成（相関チェックのみ）
+     * 開始日と終了日の値オブジェクトを受け取り、相関チェック（from <= to）を実施する
      *
-     * @param fromString 開始日の文字列（null/空の場合は明日をデフォルト）
-     * @param toString 終了日の文字列（null/空の場合は開始日から1ヶ月後をデフォルト）
+     * @param from 開始日の値オブジェクト
+     * @param to 終了日の値オブジェクト
      * @return 支払期日範囲値オブジェクト
-     * @throws DomainValidationException バリデーションエラーがある場合
+     * @throws DomainValidationException 相関チェックエラーがある場合
      */
-    public static PaymentDueDateRange create(String fromString, String toString) {
-        // デフォルト値の計算
-        PaymentDueDate defaultFrom = PaymentDueDate.defaultFrom();
-        String fromDateString = StringUtils.isEmpty(fromString)
-                ? defaultFrom.value().toString()
-                : fromString;
-
-        // 開始日のバリデーション
-        List<ValidationError> errors = new ArrayList<>();
-        errors.addAll(validateDate(fromDateString, "paymentDueFrom"));
-
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-
-        // 開始日の値オブジェクトを作成
-        PaymentDueDate from = PaymentDueDate.create(fromDateString);
-
-        // 終了日のデフォルト値計算（開始日が確定した後に計算）
-        String toDateString;
-        if (StringUtils.isEmpty(toString)) {
-            // paymentDueFromが指定されている場合はその指定日から、未指定の場合はデフォルト開始日から1ヶ月後を計算
-            PaymentDueDate defaultTo = PaymentDueDate.defaultTo(from);
-            toDateString = defaultTo.value().toString();
-        } else {
-            toDateString = toString;
-        }
-
-        // 終了日のバリデーション
-        errors.addAll(validateDate(toDateString, "paymentDueTo"));
-
-        if (!errors.isEmpty()) {
-            throw new DomainValidationException(errors);
-        }
-
-        // 終了日の値オブジェクトを作成
-        PaymentDueDate to = PaymentDueDate.create(toDateString);
-
+    public static PaymentDueDateRange create(PaymentDueDate from, PaymentDueDate to) {
         // 日付範囲のバリデーション（from <= to）
-        errors = new ArrayList<>();
-        if (from.value().isAfter(to.value())) {
-            errors.add(new ValidationError(
-                    "paymentDueTo",
-                    "validation.paymentDueTo.range"
-            ));
-        }
-
+        List<ValidationError> errors = validateRange(from, to);
         if (!errors.isEmpty()) {
             throw new DomainValidationException(errors);
         }
@@ -81,14 +37,34 @@ public record PaymentDueDateRange(PaymentDueDate from, PaymentDueDate to) {
     }
 
     /**
+     * 相関チェック（from <= to）を実行し、エラーのリストを返す
+     * 例外を投げずにエラーを返すため、複数のフィールドのバリデーションを一括で実行できる
+     *
+     * @param from 開始日の値オブジェクト
+     * @param to 終了日の値オブジェクト
+     * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
+     */
+    public static List<ValidationError> validateRange(PaymentDueDate from, PaymentDueDate to) {
+        List<ValidationError> errors = new ArrayList<>();
+        if (from.value().isAfter(to.value())) {
+            errors.add(new ValidationError(
+                    ApiPropertyNames.PAYMENT_DUE_TO,
+                    "validation.paymentDueTo.range"
+            ));
+        }
+        return errors;
+    }
+
+    /**
      * 日付文字列のバリデーション
      * PaymentDueDateのvalidateメソッドと同様のロジックだが、フィールド名を指定できる
+     * 一覧取得のクエリパラメータ用（paymentDueFrom/paymentDueTo）に使用
      *
      * @param value 日付文字列（ISO形式: yyyy-MM-dd）
      * @param fieldName フィールド名（エラーメッセージ用）
      * @return バリデーションエラーのリスト（エラーがない場合は空のリスト）
      */
-    private static List<ValidationError> validateDate(String value, String fieldName) {
+    public static List<ValidationError> validateDate(String value, String fieldName) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (StringUtils.isEmpty(value)) {

@@ -48,7 +48,7 @@ class ListInvoicesUseCaseTest {
                     .thenReturn(0L);
 
             // When
-            InvoiceListResponseDto response = listInvoicesUseCase.execute(1, null, null, null, null);
+            InvoiceListResponseDto response = listInvoicesUseCase.execute(UserId.reconstruct(1), null, null, null, null);
 
             // Then
             assertThat(response.items()).isEmpty();
@@ -88,7 +88,7 @@ class ListInvoicesUseCaseTest {
                     .thenReturn(1L);
 
             // When
-            InvoiceListResponseDto response = listInvoicesUseCase.execute(1, from.toString(), to.toString(), 1, 10);
+            InvoiceListResponseDto response = listInvoicesUseCase.execute(UserId.reconstruct(1), from.toString(), to.toString(), 1, 10);
 
             // Then
             assertThat(response.items()).hasSize(1);
@@ -107,7 +107,7 @@ class ListInvoicesUseCaseTest {
         @DisplayName("日付形式が不正な場合、DomainValidationExceptionをスローする")
         void shouldThrowDomainValidationExceptionWhenDateFormatIsInvalid() {
             // When & Then
-            assertThatThrownBy(() -> listInvoicesUseCase.execute(1, "invalid-date", null, null, null))
+            assertThatThrownBy(() -> listInvoicesUseCase.execute(UserId.reconstruct(1), "invalid-date", null, null, null))
                     .isInstanceOf(DomainValidationException.class);
         }
 
@@ -119,7 +119,7 @@ class ListInvoicesUseCaseTest {
             LocalDate to = LocalDate.now().plusDays(1);
 
             // When & Then
-            assertThatThrownBy(() -> listInvoicesUseCase.execute(1, from.toString(), to.toString(), null, null))
+            assertThatThrownBy(() -> listInvoicesUseCase.execute(UserId.reconstruct(1), from.toString(), to.toString(), null, null))
                     .isInstanceOf(DomainValidationException.class);
         }
     }

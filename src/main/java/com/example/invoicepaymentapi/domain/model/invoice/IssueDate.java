@@ -2,13 +2,14 @@ package com.example.invoicepaymentapi.domain.model.invoice;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * 発行日値オブジェクト
@@ -44,7 +45,7 @@ public record IssueDate(LocalDate value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (StringUtils.isBlank(value)) {
-            errors.add(ValidationError.required("issueDate"));
+            errors.add(ValidationError.required(ApiPropertyNames.ISSUE_DATE));
             return errors;
         }
 
@@ -52,14 +53,14 @@ public record IssueDate(LocalDate value) {
         try {
             localDate = LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE);
         } catch (DateTimeParseException e) {
-            errors.add(new ValidationError("issueDate", "validation.date.format"));
+            errors.add(new ValidationError(ApiPropertyNames.ISSUE_DATE, "validation.date.format"));
             return errors;
         }
 
         // 未来の日付チェック（過去または今日のみ許可）
         LocalDate today = LocalDate.now();
         if (localDate.isAfter(today)) {
-            errors.add(new ValidationError("issueDate", "validation.issueDate.future"));
+            errors.add(new ValidationError(ApiPropertyNames.ISSUE_DATE, "validation.issueDate.future"));
         }
 
         return errors;

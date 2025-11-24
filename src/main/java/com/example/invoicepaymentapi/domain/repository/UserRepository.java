@@ -2,6 +2,7 @@ package com.example.invoicepaymentapi.domain.repository;
 
 import com.example.invoicepaymentapi.domain.model.user.Email;
 import com.example.invoicepaymentapi.domain.model.user.User;
+import com.example.invoicepaymentapi.domain.model.user.UserId;
 
 import java.util.Optional;
 
@@ -24,5 +25,13 @@ public interface UserRepository {
      * @return 見つかったユーザー（存在しない場合は空）
      */
     Optional<User> findByEmail(Email email);
+
+    /**
+     * ユーザーIDでユーザーを検索
+     *
+     * @param userId 検索するユーザーID
+     * @return 見つかったユーザー（存在しない場合は空）
+     */
+    Optional<User> findById(UserId userId);
 }
 

@@ -3,6 +3,7 @@ package com.example.invoicepaymentapi.presentation.security;
 import com.example.invoicepaymentapi.domain.exception.UnauthorizedException;
 import com.example.invoicepaymentapi.domain.model.auth.AccessToken;
 import com.example.invoicepaymentapi.domain.model.user.UserId;
+import com.example.invoicepaymentapi.domain.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,6 +31,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
+
+    private final UserRepository userRepository;
+
+    public JwtAuthenticationFilter(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -95,6 +102,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 検証成功後、AccessToken値オブジェクトを作成
         AccessToken accessToken = new AccessToken(token);
         UserId userId = accessToken.extractUserId();
+
+        // ユーザー存在チェック
+        if (userRepository.findById(userId).isEmpty()) {
+            log.warn("Authentication failed: User not found. userId={}", userId.value());
+            throw new UnauthorizedException("error.authentication.failed");
+        }
 
         // 認証情報を作成（権限は現時点では不要）
         UsernamePasswordAuthenticationToken authentication =

@@ -2,6 +2,7 @@ package com.example.invoicepaymentapi.domain.model.user;
 
 import com.example.invoicepaymentapi.domain.exception.DomainValidationException;
 import com.example.invoicepaymentapi.domain.exception.ValidationError;
+import com.example.invoicepaymentapi.presentation.web.constants.ApiPropertyNames;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,10 +34,10 @@ public record UserId(Integer value) {
         List<ValidationError> errors = new ArrayList<>();
 
         if (value == null) {
-            errors.add(ValidationError.required("userId"));
+            errors.add(ValidationError.required(ApiPropertyNames.USER_ID));
         } else {
             if (value <= 0) {
-                errors.add(new ValidationError("userId", "validation.userId.zeroOrNegative"));
+                errors.add(new ValidationError(ApiPropertyNames.USER_ID, "validation.userId.zeroOrNegative"));
             }
         }
         return errors;

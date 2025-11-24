@@ -39,12 +39,13 @@ docker-compose ps
 
 PostgreSQL コンテナ起動時に、`docker/init/01-init.sql`が自動実行され、テーブルとインデックスが作成されます。
 
-### 2. 環境変数の設定（オプション）
+### 2. 環境変数の設定（必須）
 
-プロジェクトルートに`.env`ファイルを作成して、環境変数を設定できます。
+アプリケーションとデータベースの起動には環境変数の設定が**必須**です。  
+プロジェクトルートに`.env`ファイルを作成して、環境変数を設定してください。
 
 ```bash
-# 環境変数ファイルを作成（オプション）
+# 環境変数ファイルを作成
 cp env.example.txt .env
 # .envファイルを編集して実際の値を設定
 ```
@@ -57,7 +58,11 @@ cp env.example.txt .env
 
 ```bash
 # Gradle Wrapperを使用してアプリケーションを起動
+# Linux/Mac/Git Bashの場合
 ./gradlew bootRun
+
+# Windows (PowerShell/CMD) の場合
+gradlew.bat bootRun
 
 # または、ビルドしてから起動
 ./gradlew build
@@ -68,10 +73,25 @@ java -jar build/libs/invoice-payment-api-1.0.0.jar
 
 ### 4. 動作確認
 
-```bash
-# ヘルスチェック（アプリケーションが起動している場合）
-curl http://localhost:8080/api/v1
+Postman や curl などのツールを使用して、以下のサンプルリクエストで動作確認できます。
+
+**ユーザー登録（認証不要）**
+
+- **メソッド**: `POST`
+- **URL**: `http://localhost:8080/api/v1/users`
+- **ヘッダー**: `Content-Type: application/json`
+- **ボディ**:
+
+```json
+{
+  "companyName": "株式会社サンプル",
+  "name": "山田太郎",
+  "email": "yamada@example.com",
+  "password": "Password123!"
+}
 ```
+
+**期待されるレスポンス**: `201 Created`（レスポンスボディなし）
 
 ### 停止方法
 

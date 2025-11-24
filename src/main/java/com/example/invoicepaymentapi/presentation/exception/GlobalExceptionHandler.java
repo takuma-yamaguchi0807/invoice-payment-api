@@ -97,15 +97,25 @@ public class GlobalExceptionHandler {
      * 認証失敗例外をハンドリング
      *
      * @param ex 認証失敗例外
+     * @param locale ロケール
      * @return UnauthorizedErrorResponse
      */
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<UnauthorizedErrorResponse> handleUnauthorizedException(
-            UnauthorizedException ex
+            UnauthorizedException ex,
+            Locale locale
     ) {
+        // 例外からメッセージキーを取得し、メッセージプロパティから日本語メッセージを取得
+        String message = messageSource.getMessage(
+                ex.getMessageKey(),
+                null,
+                ex.getMessageKey(), // メッセージが見つからない場合はキーをそのまま返す
+                locale
+        );
+
         UnauthorizedErrorResponse response = new UnauthorizedErrorResponse(
                 UnauthorizedErrorResponse.UNAUTHORIZED_ERROR_CODE,
-                "Authentication failed"
+                message
         );
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);

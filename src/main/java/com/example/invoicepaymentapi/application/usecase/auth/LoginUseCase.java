@@ -8,6 +8,8 @@ import com.example.invoicepaymentapi.domain.exception.ValidationError;
 import com.example.invoicepaymentapi.domain.model.auth.AccessToken;
 import com.example.invoicepaymentapi.domain.model.user.*;
 import com.example.invoicepaymentapi.domain.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ import java.util.List;
  */
 @Service
 public class LoginUseCase {
+    private static final Logger log = LoggerFactory.getLogger(LoginUseCase.class);
     private final UserRepository userRepository;
 
     public LoginUseCase(UserRepository userRepository) {
@@ -43,17 +46,28 @@ public class LoginUseCase {
         boolean hasRequiredFieldErrors = emailErrors.stream().anyMatch(e -> e.messageKey().equals(ValidationError.REQUIRED_MESSAGE_KEY))
                 || passwordErrors.stream().anyMatch(e -> e.messageKey().equals(ValidationError.REQUIRED_MESSAGE_KEY));
         
-        // 必須フィールド不足の場合は400エラーとして返す
+        // 形式エラーと同時に返却されないように、必須エラーがある場合はそれだけを返す
         if (hasRequiredFieldErrors) {
-            List<ValidationError> allErrors = new ArrayList<>();
-            allErrors.addAll(emailErrors);
-            allErrors.addAll(passwordErrors);
-            throw new DomainValidationException(allErrors);
+            List<ValidationError> requiredErrors = new ArrayList<>();
+            // 必須エラーのみを抽出
+            emailErrors.stream()
+                    .filter(e -> e.messageKey().equals(ValidationError.REQUIRED_MESSAGE_KEY))
+                    .forEach(requiredErrors::add);
+            passwordErrors.stream()
+                    .filter(e -> e.messageKey().equals(ValidationError.REQUIRED_MESSAGE_KEY))
+                    .forEach(requiredErrors::add);
+            throw new DomainValidationException(requiredErrors);
         }
         
         // 形式エラーの場合は401エラーとして返す（セキュリティ上の理由）
         if (!emailErrors.isEmpty() || !passwordErrors.isEmpty()) {
-            throw new UnauthorizedException("Invalid email or password");
+            if (!emailErrors.isEmpty()) {
+                log.warn("Login failed: Invalid email format. email={}", requestDto.email());
+            }
+            if (!passwordErrors.isEmpty()) {
+                log.warn("Login failed: Invalid password format. email={}", requestDto.email());
+            }
+            throw new UnauthorizedException("error.authentication.failed");
         }
 
         // バリデーション成功後、値オブジェクトを作成
@@ -62,11 +76,15 @@ public class LoginUseCase {
 
         // ユーザーを検索
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+                .orElseThrow(() -> {
+                    log.warn("Login failed: User not found. email={}", requestDto.email());
+                    return new UnauthorizedException("error.authentication.failed");
+                });
 
         // パスワードを検証
         if (!user.password().verify(password)) {
-            throw new UnauthorizedException("Invalid email or password");
+            log.warn("Login failed: Password mismatch. email={}, userId={}", requestDto.email(), user.id().value());
+            throw new UnauthorizedException("error.authentication.failed");
         }
 
         // JWTアクセストークンを作成

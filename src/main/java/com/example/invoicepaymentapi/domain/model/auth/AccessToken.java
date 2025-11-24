@@ -107,7 +107,7 @@ public record AccessToken(String value) {
      */
     public static void validate(String token) {
         if (StringUtils.isEmpty(token)) {
-            throw new UnauthorizedException("JWT token is required");
+            throw new UnauthorizedException("error.authentication.token.required");
         }
 
         try {
@@ -117,16 +117,16 @@ public record AccessToken(String value) {
             throw e;
         } catch (ExpiredJwtException e) {
             log.debug("JWT token expired: {}", e.getMessage());
-            throw new UnauthorizedException("JWT token has expired");
+            throw new UnauthorizedException("error.authentication.token.expired");
         } catch (SignatureException | MalformedJwtException e) {
             log.debug("JWT token validation failed: {}", e.getMessage());
-            throw new UnauthorizedException("Invalid JWT token");
+            throw new UnauthorizedException("error.authentication.token.invalid");
         } catch (JwtException e) {
             log.debug("JWT token validation failed: {}", e.getMessage());
-            throw new UnauthorizedException("Invalid JWT token");
+            throw new UnauthorizedException("error.authentication.token.invalid");
         } catch (Exception e) {
             log.debug("Unexpected error during JWT validation: {}", e.getMessage());
-            throw new UnauthorizedException("Invalid JWT token");
+            throw new UnauthorizedException("error.authentication.token.invalid");
         }
     }
 
@@ -151,16 +151,16 @@ public record AccessToken(String value) {
             throw e;
         } catch (ExpiredJwtException e) {
             log.debug("JWT token expired: {}", e.getMessage());
-            throw new UnauthorizedException("JWT token has expired");
+            throw new UnauthorizedException("error.authentication.token.expired");
         } catch (SignatureException | MalformedJwtException e) {
             log.debug("JWT token validation failed: {}", e.getMessage());
-            throw new UnauthorizedException("Invalid JWT token");
+            throw new UnauthorizedException("error.authentication.token.invalid");
         } catch (JwtException e) {
             log.debug("JWT token validation failed: {}", e.getMessage());
-            throw new UnauthorizedException("Invalid JWT token");
+            throw new UnauthorizedException("error.authentication.token.invalid");
         } catch (Exception e) {
             log.error("Unexpected error during JWT parsing: {}", e.getMessage());
-            throw new UnauthorizedException("Invalid JWT token");
+            throw new UnauthorizedException("error.authentication.token.invalid");
         }
     }
 
